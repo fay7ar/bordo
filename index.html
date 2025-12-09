@@ -50,7 +50,7 @@ body{margin:0;background:var(--bg);direction:rtl}
     100% { transform: rotate(360deg); }
 }
 
-/* LANDING PAGE STYLES - UPDATED */
+/* LANDING PAGE STYLES - MODIFIED FOR PERFECT CENTERING */
 #landingPage {
     position: fixed;
     top: 0;
@@ -59,7 +59,8 @@ body{margin:0;background:var(--bg);direction:rtl}
     height: 100%;
     background: var(--bg);
     z-index: 9998;
-    display: none;
+    display: none; /* Controlled by JS */
+    /* Ensure content is centered */
     justify-content: center;
     align-items: center;
     padding: 20px;
@@ -68,7 +69,7 @@ body{margin:0;background:var(--bg);direction:rtl}
     background: var(--card);
     padding: 30px;
     border-radius: 15px;
-    max-width: 450px;
+    max-width: 400px; /* Adjusted for better centering on smaller screens */
     width: 100%;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     text-align: center;
@@ -103,7 +104,7 @@ body{margin:0;background:var(--bg);direction:rtl}
   text-align:left;
 }
 
-/* NEW: Button group style */
+/* Button group style */
 .landing-btn-group {
     display: flex;
     gap: 10px;
@@ -124,10 +125,10 @@ body{margin:0;background:var(--bg);direction:rtl}
 }
 
 
-/* HEADER - UPDATED */
+/* HEADER */
 header{
   /* The header is now a column container */
-  display:flex;
+  display:none; /* Controlled by JS */
   flex-direction: column; /* Stack items vertically */
   padding:14px 20px 0; /* Adjusted padding */
   background:linear-gradient(90deg,var(--green-dark),var(--green));
@@ -155,7 +156,7 @@ header{
 }
 
 /* MAIN */
-main{padding:16px;max-width:1100px;margin:auto}
+main{padding:16px;max-width:1100px;margin:auto; display: none;} /* Controlled by JS */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
@@ -167,7 +168,7 @@ main{padding:16px;max-width:1100px;margin:auto}
   border-radius:14px;
   box-shadow:0 5px 14px rgba(0,0,0,0.06);
   transition: transform 0.3s ease;
-  position: relative; /* لتموضع تراكب "نفدت الكمية" */
+  position: relative; 
 }
 .card:hover {
   transform: translateY(-5px);
@@ -233,7 +234,7 @@ main{padding:16px;max-width:1100px;margin:auto}
     font-size: 20px;
     font-weight: bold;
     text-align: center;
-    pointer-events: none; /* للسماح بالتفاعلات تحت التراكب إذا لزم الأمر */
+    pointer-events: none; 
     z-index: 5;
 }
 
@@ -253,6 +254,7 @@ main{padding:16px;max-width:1100px;margin:auto}
   cursor:pointer;
   z-index:50;
   transition: all 0.3s ease;
+  display: none; /* Controlled by JS */
 }
 .cart-btn:hover {
   background:var(--green-dark);
@@ -346,7 +348,7 @@ main{padding:16px;max-width:1100px;margin:auto}
   margin-bottom:6px;
   font-weight:600;
 }
-select,input,textarea{ /* Added textarea */
+select,input,textarea{
   width:100%;
   padding:12px;
   border-radius:10px;
@@ -360,16 +362,16 @@ select,input,textarea{ /* Added textarea */
   text-align:left;
 }
 
-/* NEW STYLES: Combined Search and Select */
+/* Combined Search and Select */
 .search-and-select-container {
     display: flex;
-    gap: 8px; /* Space between select and search */
-    margin-bottom: 10px; /* Space before categories */
+    gap: 8px; 
+    margin-bottom: 10px; 
 }
 
-/* MODIFIED STYLES for the Delivery Area Select in Header */
+/* Delivery Area Select in Header */
 .delivery-area-select-box {
-    width: 45%; /* Adjusted width for the select box */
+    width: 45%; 
     flex-shrink: 0;
 }
 /* Style change for hidden area */
@@ -380,45 +382,41 @@ select,input,textarea{ /* Added textarea */
 
 .delivery-area-select-box select {
     width: 100%;
-    /* Make it smaller and simpler (Same color as Header) */
     padding: 8px 10px; 
     border-radius: 10px;
-    border: 1px solid #ffffff55; /* Light border */
-    background: #ffffff22; /* Slightly transparent background */
-    color: white; /* White text */
+    border: 1px solid #ffffff55; 
+    background: #ffffff22; 
+    color: white; 
     box-sizing: border-box;
     font-family: inherit;
-    font-size: 13px; /* Smaller font */
+    font-size: 13px; 
     margin: 0; 
-    /* Style the dropdown arrow to be white/clearer */
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
     background-repeat: no-repeat;
     background-position: left 10px center;
-    padding-left: 30px; /* Space for the custom arrow */
+    padding-left: 30px; 
 }
-
-/* Style the options inside the select box to be readable */
 .delivery-area-select-box select option {
     background: var(--green-dark); 
     color: white;
 }
 
 
-/* MODIFIED STYLES for the Search Box */
+/* Search Box */
 .search-box {
-    width: 55%; /* Take the remaining space by default */
+    width: 55%; 
     flex-grow: 1;
 }
 
 .search-box.full-width {
-    width: 100%; /* Take full width if select box is hidden */
+    width: 100%; 
 }
 
 .search-box input{
-  margin-bottom:0; /* Removed old margin */
+  margin-bottom:0; 
   padding:10px;
   border-radius:10px;
   border:1px solid #ddd;
@@ -468,11 +466,6 @@ select,input,textarea{ /* Added textarea */
   display:flex;
   align-items:center;
   justify-content:center;
-}
-
-/* HIDDEN FORM */
-.hidden-form {
-  display: none;
 }
 
 /* SUCCESS MESSAGE */
@@ -540,7 +533,7 @@ select,input,textarea{ /* Added textarea */
     </div>
 </div>
 
-<header id="mainHeader" style="display: none;">
+<header id="mainHeader">
     <div class="header-top">
       <div style="font-size:17px;font-weight:700">دجاج بوردو</div>
       <div style="font-size:13px;opacity:.9"></div>
@@ -561,11 +554,11 @@ select,input,textarea{ /* Added textarea */
     </div>
 </header>
 
-<main id="mainContent" style="display: none;">
+<main id="mainContent">
   <div class="grid" id="products"></div>
 </main>
 
-<div class="cart-btn" id="cartBtn" style="display: none;">السلة (0)</div>
+<div class="cart-btn" id="cartBtn">السلة (0)</div>
 
 <div class="cart-sheet" id="cartSheet">
   <div class="cart-header">
@@ -645,58 +638,116 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 /* ======================== */
 
-/* GLOBAL CONSTANTS (ستصبح متغيرة من قاعدة البيانات) */
+/* GLOBAL CONSTANTS */
 const UNIFIED_IMAGE = "https://up6.cc/2025/10/176460585993361.jpg";
 
 /* GLOBAL STATE */
 let cart = {};
-let allProducts = {}; // لتخزين المنتجات من قاعدة البيانات
-let allCategories = ["الكل"]; // سيتم تحديثها
-let allAreas = {}; // لتخزين مناطق التوصيل وأسعارها
+let allProducts = {}; 
+let allCategories = ["الكل"]; 
+let allAreas = {}; 
 let activeCategory = "الكل";
-let userArea = ""; // Stored from Landing Page
-let userPhone = ""; // Stored from Landing Page
-let isBrowseMode = false; // Flag to track if user is just browsing
-
+let userArea = ""; 
+let userPhone = ""; 
+let isBrowseMode = false; 
 
 // --- FIREBASE DATA LOAD ---
 function loadData() {
     // 1. Load Products (وجبات)
     db.ref('products').on('value', snapshot => {
         allProducts = snapshot.val() || {};
-        // تحديث التصنيفات من المنتجات
         const categoriesSet = new Set(Object.values(allProducts).map(p => p.category).filter(c => c));
         allCategories = ["الكل", ...categoriesSet];
-        renderCategories();
-        renderProducts();
+        // عند تحميل المنتجات، أعد تصيير العناصر إذا كنا في واجهة المنيو
+        if (document.getElementById('mainHeader').style.display !== 'none') {
+            renderCategories();
+            renderProducts();
+        }
     });
 
     // 2. Load Delivery Areas
     db.ref('deliveryAreas').on('value', snapshot => {
         allAreas = snapshot.val() || {};
-        initLandingAreaSelect(); // إعادة تهيئة قائمة المناطق في صفحة الهبوط
-        initHeaderAreaSelect(); // إعادة تهيئة قائمة المناطق في الترويسة
+        // عند تحميل المناطق، أعد تهيئة قوائم الاختيار
+        initLandingAreaSelect(); 
+        initHeaderAreaSelect(); 
     });
 }
 
-// --- PRELOADER & LANDING PAGE LOGIC ---
+// --- VIEW MANAGEMENT & HISTORY API (جديد/مُعدّل) ---
 
-// 1. Hide Preloader after page load
+/**
+ * دالة مركزية للتحكم في عرض الصفحات (صفحة الهبوط أو المنيو).
+ * تستخدم هذه الدالة لتحديث الواجهة بناءً على حالة التاريخ (History State).
+ */
+function showPage(pageName, browseMode = false) {
+    // 1. إخفاء جميع الأجزاء الرئيسية
+    document.getElementById('landingPage').style.display = 'none';
+    document.getElementById('mainHeader').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('cartBtn').style.display = 'none';
+
+    if (pageName === 'landing') {
+        document.getElementById('landingPage').style.display = 'flex';
+    } else if (pageName === 'main') {
+        document.getElementById('mainHeader').style.display = 'flex';
+        document.getElementById('mainContent').style.display = 'block';
+        
+        const areaSelectBox = document.getElementById('areaSelectBox');
+        const searchBoxContainer = document.getElementById('searchBoxContainer');
+        
+        // 2. تطبيق وضع التصفح أو الطلب الكامل
+        if (browseMode) {
+            areaSelectBox.classList.add('hidden'); // إخفاء اختيار المنطقة
+            searchBoxContainer.classList.add('full-width'); // جعل البحث عرض كامل
+        } else {
+            areaSelectBox.classList.remove('hidden'); // إظهار اختيار المنطقة
+            searchBoxContainer.classList.remove('full-width'); // إعادة ضبط عرض البحث
+            document.getElementById('cartBtn').style.display = 'block'; // إظهار زر السلة
+        }
+        
+        // إعادة تصيير العناصر عند العودة من صفحة الهبوط
+        initHeaderAreaSelect();
+        renderProducts();
+        renderCategories();
+        renderCart();
+    }
+}
+
+
+// 1. Initial Load & History Setup
 window.onload = function() {
     loadData(); // ابدأ بتحميل البيانات من Firebase
+    
+    // **الجزء الجديد:** تهيئة حالة التاريخ الأولية.
+    // يتم استبدال الحالة الحالية لحفظ 'landing' كحالة أولى
+    history.replaceState({ page: 'landing' }, '', location.pathname); 
+
     document.getElementById('preloader').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('preloader').style.display = 'none';
-        document.getElementById('landingPage').style.display = 'flex'; // Show landing page
+        showPage('landing'); // عرض صفحة الهبوط
     }, 500);
 };
+
+// **الجزء الجديد:** الاستماع لحدث الرجوع في الهاتف
+window.addEventListener('popstate', (event) => {
+    const state = event.state;
+    // إذا كانت الحالة في تاريخ المتصفح هي 'main'، اعرض المنيو
+    if (state && state.page === 'main') {
+        showPage('main', state.browse);
+    } else {
+        // إذا كانت الحالة فارغة أو غير 'main' (أي 'landing')، اعرض صفحة الهبوط
+        showPage('landing');
+    }
+});
+
 
 // 2. Populate Landing Area Select from Firebase data
 function initLandingAreaSelect() {
     const landingAreaSelect = document.getElementById("landingAreaSelect");
     landingAreaSelect.innerHTML = '<option value="" disabled selected>اختر منطقة التوصيل</option>';
     
-    // استخدام المناطق المحملة من Firebase
     Object.keys(allAreas).forEach(areaKey => {
         const area = allAreas[areaKey];
         const option = document.createElement("option");
@@ -707,7 +758,7 @@ function initLandingAreaSelect() {
 }
 
 
-// 3. Handle Landing Page interaction (Start Ordering)
+// 3. Handle Landing Page interaction (Start Ordering) - MODIFIED
 document.getElementById("startOrdering").onclick = function() {
     const landingAreaSelect = document.getElementById("landingAreaSelect");
     const landingPhoneNumberInput = document.getElementById("landingPhoneNumber");
@@ -715,7 +766,6 @@ document.getElementById("startOrdering").onclick = function() {
     const area = landingAreaSelect.value;
     const phone = landingPhoneNumberInput.value.trim();
 
-    // Validation
     if (!area) {
         alert("الرجاء اختيار منطقة التوصيل.");
         landingAreaSelect.focus();
@@ -727,66 +777,42 @@ document.getElementById("startOrdering").onclick = function() {
         return;
     }
 
-    // Save state
     userArea = area;
     userPhone = phone;
-    isBrowseMode = false; // Full ordering mode
+    isBrowseMode = false;
 
-    // Transition to main content
     enterMainApp(false); 
 };
 
-// 4. Handle Landing Page interaction (Browse Menu)
+// 4. Handle Landing Page interaction (Browse Menu) - MODIFIED
 document.getElementById("browseMenu").onclick = function() {
-    // Clear user data just in case
     userArea = ""; 
     userPhone = "";
-    isBrowseMode = true; // Browse mode
+    isBrowseMode = true; 
 
-    // Transition to main content
     enterMainApp(true); 
 };
 
-// 5. Function to transition to the main app interface
+// 5. Function to transition to the main app interface (MODIFIED)
 function enterMainApp(browseMode = false) {
-    document.getElementById('landingPage').style.display = 'none';
-    document.getElementById('mainHeader').style.display = 'flex';
-    document.getElementById('mainContent').style.display = 'block';
+    // **الجزء الجديد:** دفع حالة جديدة إلى التاريخ عند دخول المنيو
+    history.pushState({ page: 'main', browse: browseMode }, '', '#menu');
 
-    const areaSelectBox = document.getElementById('areaSelectBox');
-    const searchBoxContainer = document.getElementById('searchBoxContainer');
-    
-    // Hide/Show elements based on mode
-    if (browseMode) {
-        areaSelectBox.classList.add('hidden'); // Hide area select in header
-        searchBoxContainer.classList.add('full-width'); // Make search bar full width
-        document.getElementById('cartBtn').style.display = 'none'; // Hide cart button
-    } else {
-        areaSelectBox.classList.remove('hidden'); // Show area select in header
-        searchBoxContainer.classList.remove('full-width'); // Reset search bar width
-        document.getElementById('cartBtn').style.display = 'block'; // Show cart button
-    }
-
-    // Initialize main page elements
-    initHeaderAreaSelect();
-    renderProducts();
-    renderCategories();
-    renderCart();
+    // استخدام الدالة المركزية showPage
+    showPage('main', browseMode);
 }
 
 // --- HEADER AREA SELECT LOGIC ---
 
 function initHeaderAreaSelect() {
     const headerAreaSelect = document.getElementById("headerAreaSelect");
-    headerAreaSelect.innerHTML = ""; // Clear existing options
+    headerAreaSelect.innerHTML = ""; 
 
-    // Add a default label for clarity
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
     defaultOption.textContent = "اختر المنطقة";
     headerAreaSelect.appendChild(defaultOption);
 
-    // Populate the dropdown with options from allAreas
     Object.values(allAreas).forEach(area => {
         const option = document.createElement("option");
         option.value = area.name;
@@ -794,16 +820,14 @@ function initHeaderAreaSelect() {
         headerAreaSelect.appendChild(option);
     });
 
-    // Set the initial value from the landing page
     if (userArea) {
         headerAreaSelect.value = userArea;
     }
     
-    // Add the event listener after populating
     headerAreaSelect.onchange = updateTotal;
 }
 
-// --- PRODUCT & CATEGORY LOGIC ---
+// --- PRODUCT & CATEGORY LOGIC (كما هو) ---
 
 function renderProducts(searchQuery = ""){
   const box = document.getElementById("products");
@@ -813,12 +837,8 @@ function renderProducts(searchQuery = ""){
   const productsArray = Object.values(allProducts).filter(p => p && p.name && p.category && p.price);
 
   const filteredProducts = productsArray.filter(p => {
-    // 1. Filter by Search Query
     const matchesSearch = p.name.toLowerCase().includes(query) || (p.desc || '').toLowerCase().includes(query);
-    
-    // 2. Filter by Category
     const matchesCategory = activeCategory === "الكل" || p.category === activeCategory;
-
     return matchesSearch && matchesCategory;
   });
 
@@ -870,21 +890,21 @@ function setCategory(category){
 }
 
 
-// --- CART LOGIC ---
+// --- CART LOGIC (كما هو) ---
 
 function addToCart(id){
   // If in browse mode, force user back to landing page
   if (isBrowseMode) {
     alert("الرجاء إدخال رقم هاتفك ومنطقة التوصيل لبدء الطلب.");
-    document.getElementById('mainHeader').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'none';
-    document.getElementById('landingPage').style.display = 'flex';
+    // استخدام دالة الرجوع للعرض
+    showPage('landing');
+    // **الجزء الجديد:** استعادة حالة التاريخ إلى 'landing' عند محاولة الإضافة
+    history.pushState({ page: 'landing' }, '', location.pathname); 
     return;
   }
 
-  // Normal add to cart logic
   const p = allProducts[id];
-  if(!p || p.outOfStock) return; // منع الإضافة إذا نفدت الكمية
+  if(!p || p.outOfStock) return; 
 
   if(!cart[id]) cart[id] = {...p, qty:0};
   cart[id].qty++;
@@ -955,39 +975,32 @@ document.getElementById("cartSheet").addEventListener('click', function(e) {
 
 /* ORDER TYPE + DELIVERY */
 document.getElementById("orderType").onchange = updateTotal;
-document.getElementById("paymentType").onchange = updateTotal; // إضافة طريقة الدفع
+document.getElementById("paymentType").onchange = updateTotal; 
 
 /* FINAL TOTAL */
 function updateTotal(){
   let subtotal = 0;
   Object.values(cart).forEach(i=> subtotal += i.price * i.qty);
   
-  // دالة مساعدة للحصول على سعر التوصيل
   function getDeliveryPrice(areaName) {
       const area = Object.values(allAreas).find(a => a.name === areaName);
       return area ? area.price : 0;
   }
 
   const type = document.getElementById("orderType").value;
-  // Get area from header select, which holds the user's current choice
   const area = document.getElementById("headerAreaSelect").value; 
   let delivery = 0;
 
-  // Calculate delivery only if type is delivery AND an area is selected
   if(type==="delivery" && area){
     delivery = getDeliveryPrice(area) || 0;
-    // Show delivery price in cart
     document.getElementById("deliveryPriceBox").style.display = 'flex';
     document.getElementById("deliveryPrice").textContent = delivery.toFixed(2) + " دينار";
   } else {
-    // Hide delivery price in cart
     document.getElementById("deliveryPriceBox").style.display = 'none';
   }
 
-  // Update the subtotal (no change here)
   document.getElementById("subtotal").textContent = subtotal.toFixed(2) + " دينار";
   
-  // Calculate final total and display
   document.getElementById("finalTotal").textContent =
     (subtotal + delivery).toFixed(2) + " دينار";
 }
@@ -1011,21 +1024,17 @@ document.getElementById("placeOrder").onclick = ()=>{
   
   const orderNotes = document.getElementById("orderNotes").value.trim();
   const orderType = document.getElementById("orderType").value;
-  const paymentType = document.getElementById("paymentType").value; // طريقة الدفع
+  const paymentType = document.getElementById("paymentType").value; 
   
-  // Get area from the main header select (it will have the userArea or updated value)
   const area = document.getElementById("headerAreaSelect").value;
   
-  // *** VALIDATION LOGIC: Check area is still selected if delivery is chosen ***
   if(orderType === "delivery" && !area) {
      alert("الرجاء اختيار منطقة التوصيل من القائمة في الترويسة (أعلى الصفحة) لإكمال طلب التوصيل.");
      document.getElementById("headerAreaSelect").focus();
      return;
   }
   
-  // Calculate totals
   let subtotal = 0;
-  // تحويل عناصر السلة إلى مصفوفة لسهولة الحفظ
   const cartItems = Object.values(cart).map(i => {
     subtotal += i.price * i.qty;
     return {
@@ -1037,7 +1046,6 @@ document.getElementById("placeOrder").onclick = ()=>{
     };
   });
   
-  // دالة مساعدة للحصول على سعر التوصيل
   function getDeliveryPrice(areaName) {
       const area = Object.values(allAreas).find(a => a.name === areaName);
       return area ? area.price : 0;
@@ -1061,7 +1069,7 @@ document.getElementById("placeOrder").onclick = ()=>{
     notes: orderNotes || "لا يوجد ملاحظات",
     items: cartItems,
     createdAt: Date.now(),
-    status: 'received' // حالة الطلب الأولية
+    status: 'received' 
   };
   
   // Send to Firebase
@@ -1073,17 +1081,14 @@ document.getElementById("placeOrder").onclick = ()=>{
         cart = {};
         renderCart();
         document.getElementById("orderNotes").value = "";
-        document.getElementById("orderType").value = "delivery"; // Reset to default
-        document.getElementById("paymentType").value = "cash"; // Reset to default
+        document.getElementById("orderType").value = "delivery"; 
+        document.getElementById("paymentType").value = "cash"; 
         document.getElementById("cartSheet").classList.remove("open");
     })
     .catch(error => {
         alert("حدث خطأ أثناء إرسال الطلب: " + error.message);
     });
 };
-
-// يتم تحميل البيانات في window.onload
-// loadData(); 
 </script>
 </body>
 </html>
