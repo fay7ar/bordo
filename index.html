@@ -14,7 +14,7 @@
   --muted:#6b7280;
   font-family: "Segoe UI", Tahoma, Arial;
 }
-body{margin:0;background:var(--bg);direction:rtl}
+body{margin:0;background:var(--bg);direction:rtl;padding: 40px 0;} /* تم تعديل padding body */
 
 /* PRELOADER STYLES */
 #preloader {
@@ -63,13 +63,13 @@ body{margin:0;background:var(--bg);direction:rtl}
     /* التعديل هنا: استخدام display: grid و place-items: center للتوسيط الكامل */
     display: grid; 
     place-items: center;
-    padding: 20px;
+    padding: 40px 20px; /* تم تعديل المسافة الخارجية للسماح بإظهار المحتوى بالكامل */
 }
 .landing-content {
     background: var(--card);
-    padding: 30px;
+    padding: 40px; /* تم زيادة المسافة الداخلية */
     border-radius: 15px;
-    max-width: 400px; /* تم التعديل لتصغير الصفحة قليلاً */
+    max-width: 450px; /* تم التعديل لتصغير الصفحة قليلاً */
     width: 100%;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     text-align: center;
@@ -607,9 +607,7 @@ select,input,textarea{ /* Added textarea */
       <div class="form-group">
         <label>طريقة الدفع</label>
         <select id="paymentType">
-          <option value="cash">كاش عند الاستلام</option>
-          <option value="mobi">موبي كاش</option>
-        </select>
+          </select>
       </div>
 
       <div class="total-box" style="margin-top:16px">
@@ -656,6 +654,7 @@ let cart = {};
 let allProducts = {}; // لتخزين المنتجات من قاعدة البيانات
 let allCategories = ["الكل"]; // سيتم تحديثها
 let allAreas = {}; // لتخزين مناطق التوصيل وأسعارها
+let allPaymentMethods = {}; // <-- إضافة متغير جديد لطرق الدفع
 let activeCategory = "الكل";
 let userArea = ""; // Stored from Landing Page
 let userPhone = ""; // Stored from Landing Page
@@ -680,13 +679,55 @@ function loadData() {
         initLandingAreaSelect(); // إعادة تهيئة قائمة المناطق في صفحة الهبوط
         initHeaderAreaSelect(); // إعادة تهيئة قائمة المناطق في الترويسة
     });
+    
+    // 3. Load Payment Methods
+    db.ref('paymentMethods').on('value', snapshot => {
+        allPaymentMethods = snapshot.val() || {};
+        renderPaymentOptions(); // إعادة بناء خيارات الدفع بعد التحميل
+    });
 }
+
+// 4. Render Payment Options (جديدة)
+function renderPaymentOptions() {
+    const paymentSelect = document.getElementById("paymentType");
+    paymentSelect.innerHTML = ''; // مسح الخيارات الحالية
+
+    // إضافة الخيارات المحملة من Firebase
+    Object.keys(allPaymentMethods).forEach(methodKey => {
+        const method = allPaymentMethods[methodKey];
+        const option = document.createElement("option");
+        option.value = method.name; // قيمة الخيار هي اسم طريقة الدفع
+        option.textContent = method.name;
+        paymentSelect.appendChild(option);
+    });
+    
+    // إذا لم تكن هناك طرق دفع، يمكن إضافة خيار افتراضي
+    if (Object.keys(allPaymentMethods).length === 0) {
+        const option = document.createElement("option");
+        option.value = "كاش عند الاستلام";
+        option.textContent = "كاش عند الاستلام (افتراضي)";
+        paymentSelect.appendChild(option);
+    }
+}
+
 
 // --- PRELOADER & LANDING PAGE LOGIC ---
 
 // 1. Hide Preloader after page load
 window.onload = function() {
     loadData(); // ابدأ بتحميل البيانات من Firebase
+    
+    // تحميل البيانات المحفوظة من localStorage
+    const savedPhone = localStorage.getItem('userPhone');
+    const savedArea = localStorage.getItem('userArea');
+    if (savedPhone) {
+        document.getElementById('landingPhoneNumber').value = savedPhone;
+    }
+    // حفظ المنطقة في الذاكرة المؤقتة لـ initLandingAreaSelect لاستخدامها
+    if (savedArea) {
+        userArea = savedArea; 
+    }
+    
     document.getElementById('preloader').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('preloader').style.display = 'none';
@@ -700,6 +741,8 @@ window.onload = function() {
 // 2. Populate Landing Area Select from Firebase data
 function initLandingAreaSelect() {
     const landingAreaSelect = document.getElementById("landingAreaSelect");
+    // حفظ القيمة الحالية قبل مسحها إذا كانت موجودة (من userArea)
+    const currentSelectedArea = userArea || landingAreaSelect.value; 
     landingAreaSelect.innerHTML = '<option value="" disabled selected>اختر منطقة التوصيل</option>';
     
     // استخدام المناطق المحملة من Firebase
@@ -707,9 +750,15 @@ function initLandingAreaSelect() {
         const area = allAreas[areaKey];
         const option = document.createElement("option");
         option.value = area.name;
-        option.textContent = `${area.name} (${area.price.toFixed(2)} دينار)`;
+        // التعديل: عرض اسم المنطقة فقط، بدون السعر
+        option.textContent = area.name; 
         landingAreaSelect.appendChild(option);
     });
+    
+    // تعيين القيمة المحفوظة إذا كانت موجودة (من localStorage أو الذاكرة المؤقتة)
+    if (currentSelectedArea) {
+        landingAreaSelect.value = currentSelectedArea;
+    }
 }
 
 
@@ -737,6 +786,10 @@ document.getElementById("startOrdering").onclick = function() {
     userArea = area;
     userPhone = phone;
     isBrowseMode = false; // Full ordering mode
+    
+    // حفظ البيانات في localStorage هنا
+    localStorage.setItem('userPhone', userPhone);
+    localStorage.setItem('userArea', userArea);
 
     // Transition to main content
     enterMainApp(false); 
@@ -785,6 +838,7 @@ function enterMainApp(browseMode = false) {
     renderProducts();
     renderCategories();
     renderCart();
+    renderPaymentOptions(); // لضمان ظهور خيارات الدفع
 }
 
 // *** إضافة: منطق معالجة زر الرجوع (Back Button) ***
@@ -1007,6 +1061,7 @@ function updateTotal(){
   
   // دالة مساعدة للحصول على سعر التوصيل
   function getDeliveryPrice(areaName) {
+      // Find the area object by name and return its price
       const area = Object.values(allAreas).find(a => a.name === areaName);
       return area ? area.price : 0;
   }
@@ -1097,7 +1152,7 @@ document.getElementById("placeOrder").onclick = ()=>{
     customerPhone: userPhone,
     customerArea: area || "استلام من المطعم",
     method: orderType, // delivery or take
-    payment: paymentType, // cash or mobi
+    payment: paymentType, // اسم طريقة الدفع
     total: finalTotal,
     subtotal: subtotal,
     deliveryFee: delivery,
@@ -1117,7 +1172,7 @@ document.getElementById("placeOrder").onclick = ()=>{
         renderCart();
         document.getElementById("orderNotes").value = "";
         document.getElementById("orderType").value = "delivery"; // Reset to default
-        document.getElementById("paymentType").value = "cash"; // Reset to default
+        // لا يتم إعادة ضبط طريقة الدفع لكي يستخدم العميل آخر طريقة اختارها
         document.getElementById("cartSheet").classList.remove("open");
     })
     .catch(error => {
