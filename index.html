@@ -710,7 +710,7 @@ select,input,textarea{
 </div>
 
 <script>
-/* ===== إعداد Firebase ===== */
+/* ===== إعداد Firebase (يستخدم فقط لجلب بيانات الأصناف والمناطق وطرق الدفع) ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCA7vLmbwRC-PU_lEMkTiMf3X6pfNm2fbw",
   authDomain: "bordo-ly.firebaseapp.com",
@@ -724,7 +724,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 /* ======================== */
 
-/* GLOBAL CONSTANTS (ستصبح متغيرة من قاعدة البيانات) */
+/* GLOBAL CONSTANTS */
 const UNIFIED_IMAGE = "https://up6.cc/2025/10/176460585993361.jpg";
 
 /* GLOBAL STATE */
@@ -1136,7 +1136,7 @@ function closeSuccessMessage() {
   document.getElementById("successMessage").style.display = "none";
 }
 
-/* PLACE ORDER - Send to Firebase */
+/* PLACE ORDER - Send to WhatsApp */
 document.getElementById("placeOrder").onclick = ()=>{
   if(Object.keys(cart).length===0){
     alert("السلة فارغة!");
@@ -1158,13 +1158,7 @@ document.getElementById("placeOrder").onclick = ()=>{
   let subtotal = 0;
   const cartItems = Object.values(cart).map(i => {
     subtotal += i.price * i.qty;
-    return {
-        id: i.id,
-        name: i.name,
-        price: i.price,
-        qty: i.qty,
-        total: i.price * i.qty
-    };
+    return `${i.qty} x ${i.name} (${i.price.toFixed(2)} د)`;
   });
   
   function getDeliveryPrice(areaName) {
@@ -1178,33 +1172,43 @@ document.getElementById("placeOrder").onclick = ()=>{
   }
   const finalTotal = subtotal + delivery;
   
-  const orderData = {
-    customerPhone: userPhone,
-    customerArea: area || "استلام من المطعم",
-    method: orderType,
-    payment: paymentType,
-    total: finalTotal,
-    subtotal: subtotal,
-    deliveryFee: delivery,
-    notes: orderNotes || "لا يوجد ملاحظات",
-    items: cartItems,
-    createdAt: Date.now(),
-    status: 'received'
-  };
+  // --- إنشاء رسالة الواتساب ---
+  // رقم 0919593444 تم تحويله إلى التنسيق الدولي بدون علامة + (218919593444)
+  const whatsappNumber = "218919593444"; 
+  const orderDetails = `
+*🌟 طلب جديد من دجاج بوردو 🌟*
+
+*👤 معلومات العميل:*
+رقم الهاتف: ${userPhone}
+منطقة التوصيل: ${area || "غير محددة (استلام)"}
+طريقة الطلب: ${orderType === 'delivery' ? 'توصيل' : 'استلام من المطعم'}
+طريقة الدفع: ${paymentType}
+
+*📝 تفاصيل الطلب:*
+${cartItems.join('\n')}
+
+*💰 ملخص التكلفة:*
+المجموع الفرعي: ${subtotal.toFixed(2)} د
+رسوم التوصيل: ${delivery.toFixed(2)} د
+*الإجمالي النهائي: ${finalTotal.toFixed(2)} دينار*
+
+*💬 ملاحظات العميل:*
+${orderNotes || "لا يوجد ملاحظات."}
+  `.trim();
   
-  db.ref('orders').push(orderData)
-    .then(() => {
-        showSuccessMessage();
-        
-        cart = {};
-        renderCart();
-        document.getElementById("orderNotes").value = "";
-        document.getElementById("orderType").value = "delivery";
-        document.getElementById("cartSheet").classList.remove("open");
-    })
-    .catch(error => {
-        alert("حدث خطأ أثناء إرسال الطلب: " + error.message);
-    });
+  const encodedDetails = encodeURIComponent(orderDetails);
+  const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedDetails}`;
+  
+  // فتح رابط الواتساب في نافذة جديدة
+  window.open(whatsappURL, '_blank');
+  
+  // مسح السلة وعرض رسالة النجاح
+  showSuccessMessage();
+  cart = {};
+  renderCart();
+  document.getElementById("orderNotes").value = "";
+  document.getElementById("orderType").value = "delivery";
+  document.getElementById("cartSheet").classList.remove("open");
 };
 </script>
 </body>
