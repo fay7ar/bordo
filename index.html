@@ -737,6 +737,7 @@ let activeCategory = "الكل";
 let userArea = "";
 let userPhone = "";
 let isBrowseMode = false;
+let productOrder = []; // متغير جديد لتخزين ترتيب الأصناف
 
 
 // --- FIREBASE DATA LOAD ---
@@ -744,20 +745,36 @@ function loadData() {
     // 1. Load Products (وجبات)
     db.ref('products').on('value', snapshot => {
         allProducts = snapshot.val() || {};
-        const categoriesSet = new Set(Object.values(allProducts).map(p => p.category).filter(c => c));
-        allCategories = ["الكل", ...categoriesSet];
-        renderCategories();
-        renderProducts();
+        
+        // تحويل كائن المنتجات إلى مصفوفة للتعامل معها
+        const productsArray = Object.keys(allProducts).map(key => {
+            return { id: key, ...allProducts[key] };
+        });
+        
+        // 2. تحميل ترتيب المنتجات
+        db.ref('productOrder').on('value', orderSnapshot => {
+            productOrder = orderSnapshot.val() || [];
+            
+            // استخراج التصنيفات من المنتجات
+            const categoriesSet = new Set();
+            productsArray.forEach(p => {
+                if (p.category) categoriesSet.add(p.category);
+            });
+            allCategories = ["الكل", ...categoriesSet];
+            
+            renderCategories();
+            renderProducts();
+        });
     });
 
-    // 2. Load Delivery Areas
+    // 3. Load Delivery Areas
     db.ref('deliveryAreas').on('value', snapshot => {
         allAreas = snapshot.val() || {};
         initLandingAreaSelect();
         initHeaderAreaSelect();
     });
     
-    // 3. Load Payment Methods
+    // 4. Load Payment Methods
     db.ref('paymentMethods').on('value', snapshot => {
         allPaymentMethods = snapshot.val() || {};
         renderPaymentOptions();
@@ -958,7 +975,26 @@ function renderProducts(searchQuery = ""){
   box.innerHTML = "";
   const query = searchQuery.toLowerCase();
 
-  const productsArray = Object.values(allProducts).filter(p => p && p.name && p.category && p.price);
+  // تحويل المنتجات إلى مصفوفة مع إضافة المعرف
+  let productsArray = Object.keys(allProducts).map(key => {
+    return { id: key, ...allProducts[key] };
+  }).filter(p => p && p.name && p.category && p.price);
+
+  // تطبيق الترتيب إذا كان موجوداً
+  if (productOrder && productOrder.length > 0) {
+    // إنشاء خريطة لترتيب المنتجات
+    const orderMap = {};
+    productOrder.forEach((id, index) => {
+      orderMap[id] = index;
+    });
+    
+    // فرز المنتجات حسب الترتيب المحفوظ
+    productsArray.sort((a, b) => {
+      const orderA = orderMap[a.id] !== undefined ? orderMap[a.id] : Infinity;
+      const orderB = orderMap[b.id] !== undefined ? orderMap[b.id] : Infinity;
+      return orderA - orderB;
+    });
+  }
 
   const filteredProducts = productsArray.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(query) || (p.desc || '').toLowerCase().includes(query);
@@ -1027,7 +1063,7 @@ function addToCart(id){
   const p = allProducts[id];
   if(!p || p.outOfStock) return;
 
-  if(!cart[id]) cart[id] = {...p, qty:0};
+  if(!cart[id]) cart[id] = {...p, id: id, qty: 0};
   cart[id].qty++;
   renderCart();
 }
