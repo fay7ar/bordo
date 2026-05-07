@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>دجاج بوردو</title>
   
-  <!-- Leaflet CSS & JS (بدون شعار OpenStreetMap عبر إزالة السماحية) -->
+  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
@@ -13,9 +13,6 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  
-  <!-- أيقونة دبوس أخضر مخصص Green Marker -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
   <style>
     * {
@@ -31,7 +28,6 @@
       padding-bottom: 75px;
     }
     
-    /* ========== متغيرات ========== */
     :root {
       --primary: #28a745;
       --primary-dark: #1d7a33;
@@ -44,7 +40,6 @@
       --shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     
-    /* ========== شاشة التحميل ========== */
     #splash {
       position: fixed;
       top: 0;
@@ -74,7 +69,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    /* ========== شاشة تسجيل الدخول ========== */
     #landingPage {
       position: fixed;
       top: 0;
@@ -156,7 +150,6 @@
     }
     .btn-secondary:hover { background: #5a6268; }
     
-    /* ========== الهيدر ========== */
     .app-header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary));
       color: white;
@@ -227,7 +220,6 @@
       font-size: 13px;
     }
     
-    /* ========== التصنيفات ========== */
     .categories {
       display: flex;
       gap: 10px;
@@ -251,7 +243,6 @@
       color: white;
     }
     
-    /* ========== قائمة المنتجات ========== */
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -265,6 +256,7 @@
       box-shadow: var(--shadow);
       cursor: pointer;
       transition: transform 0.2s;
+      position: relative;
     }
     .product-card:hover { transform: translateY(-3px); }
     .product-img {
@@ -315,9 +307,7 @@
       top: 10px;
       right: 10px;
     }
-    .product-card { position: relative; }
     
-    /* ========== صفحة تفاصيل المنتج (Modal) ========== */
     .modal {
       position: fixed;
       top: 0;
@@ -384,7 +374,6 @@
       font-size: 24px;
     }
     
-    /* ========== خطوات الدفع ========== */
     .checkout-steps {
       position: fixed;
       top: 0;
@@ -439,7 +428,6 @@
       flex: 1;
     }
     
-    /* صفحة اختيار طريقة الدفع */
     .payment-methods {
       display: flex;
       flex-direction: column;
@@ -469,7 +457,6 @@
       font-size: 16px;
     }
     
-    /* صفحة الخريطة - بدون شعار الخرائط */
     #map {
       height: 400px;
       width: 100%;
@@ -478,7 +465,6 @@
       background: #e9ecef;
       z-index: 1;
     }
-    /* إخفاء شعار OpenStreetMap و Leaflet attribute */
     .leaflet-control-attribution {
       display: none !important;
     }
@@ -493,7 +479,6 @@
       font-size: 13px;
     }
     
-    /* صفحة تأكيد الطلب */
     .order-summary-card {
       background: #f8f9fa;
       border-radius: 16px;
@@ -525,7 +510,6 @@
       font-size: 14px;
     }
     
-    /* صفحة طلباتي */
     .orders-container {
       padding: 16px;
     }
@@ -543,25 +527,10 @@
       border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
-    }
-    .status-pending { background: #fff3cd; color: #856404; }
-    .status-preparing { background: #ffe5d0; color: #fd7e14; }
-    .status-delivering { background: #cce5ff; color: #004085; }
-    .status-delivered { background: #d4edda; color: #155724; }
-    .status-cancelled { background: #f8d7da; color: #721c24; }
-    
-    .cancel-order {
-      background: var(--danger);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-size: 12px;
-      margin-top: 10px;
-      cursor: pointer;
+      background: #d4edda;
+      color: #155724;
     }
     
-    /* ========== السلة السفلية ========== */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -599,7 +568,6 @@
       font-weight: 500;
     }
     
-    /* Toast */
     .toast-msg {
       position: fixed;
       bottom: 90px;
@@ -619,13 +587,11 @@
 </head>
 <body>
 
-<!-- شاشة التحميل -->
 <div id="splash">
   <img src="https://www2.0zz0.com/2025/12/09/18/567526201.png" alt="Logo">
   <div class="spinner"></div>
 </div>
 
-<!-- شاشة تسجيل الدخول -->
 <div id="landingPage">
   <div class="landing-card">
     <h2>دجاج بوردو - شارع المركبات</h2>
@@ -645,7 +611,6 @@
   </div>
 </div>
 
-<!-- التطبيق الرئيسي -->
 <div id="app" style="display: none;">
   <div class="app-header">
     <div class="header-row">
@@ -667,11 +632,9 @@
   </div>
   
   <div class="categories" id="categoriesList"></div>
-  
   <div class="products-grid" id="productsGrid"></div>
 </div>
 
-<!-- القائمة السفلية -->
 <div id="bottomNav" class="bottom-nav" style="display: none;">
   <div class="nav-item active" onclick="showMenuTab()" id="navMenu">
     <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
@@ -683,7 +646,6 @@
   </div>
 </div>
 
-<!-- صفحة الطلبات -->
 <div id="ordersPanel" style="display: none; padding-bottom: 80px;">
   <div class="app-header" style="position: sticky; top: 0;">
     <div class="header-row">
@@ -696,7 +658,6 @@
   <div class="orders-container" id="ordersList"></div>
 </div>
 
-<!-- نافذة تفاصيل المنتج -->
 <div id="productModal" class="modal">
   <div class="close-modal" onclick="closeProductModal()">✕</div>
   <div class="modal-content">
@@ -706,13 +667,12 @@
       <div class="modal-price" id="modalPrice"></div>
       <div class="modal-desc" id="modalDesc"></div>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="modalAddBtn" onclick="addCurrentProductToCart()"> إضافة الى السلة</button>
+        <button class="btn btn-primary" id="modalAddBtn" onclick="addCurrentProductToCart()">إضافة الى السلة</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- خطوات الدفع -->
 <div id="checkoutPanel" class="checkout-steps">
   <div class="checkout-header">
     <button class="back-btn" onclick="closeCheckout()">→</button>
@@ -726,7 +686,6 @@
 </div>
 
 <script>
-  // ==================== إعداد Firebase ====================
   const firebaseConfig = {
     apiKey: "AIzaSyC1cXTxqehGPW5EBjEf2vVsXtA7FyDe3R8",
     authDomain: "bordo-911.firebaseapp.com",
@@ -739,7 +698,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   
-  // ==================== المتغيرات العامة ====================
   let allProducts = {};
   let allCategories = ["الكل"];
   let allAreas = {};
@@ -750,6 +708,7 @@
   let isBrowseMode = false;
   let productOrder = [];
   let activeCategory = "الكل";
+  let userOrders = []; // Local orders array for user's order history
   
   let checkoutData = {
     step: 1,
@@ -767,7 +726,6 @@
   const RESTAURANT_WHATSAPP = "218919593444";
   const UNIFIED_IMAGE = "https://up6.cc/2025/10/176460585993361.jpg";
   
-  // دبوس أخضر مخصص (أيقونة Leaflet)
   const greenIcon = L.icon({
     iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -777,7 +735,6 @@
     shadowSize: [41, 41]
   });
   
-  // ==================== تحميل البيانات ====================
   function loadData() {
     db.ref('products').on('value', (s) => {
       allProducts = s.val() || {};
@@ -800,6 +757,7 @@
       }
     });
     loadCartFromStorage();
+    loadUserOrdersFromLocal(); // Load saved orders from localStorage
   }
   
   function updateCategories() {
@@ -873,7 +831,6 @@
     renderProducts();
   }
   
-  // ==================== عرض المنتجات ====================
   function renderProducts() {
     const grid = document.getElementById('productsGrid');
     if(!grid) return;
@@ -910,7 +867,7 @@
         <div class="product-info">
           <div class="product-name">${p.name}</div>
           <div class="product-price">${p.price} دينار</div>
-          <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.id}')" ${p.outOfStock ? 'disabled' : ''}>${p.outOfStock ? 'نفدت' : '  إضافة الى السلة'}</button>
+          <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.id}')" ${p.outOfStock ? 'disabled' : ''}>${p.outOfStock ? 'نفدت' : 'إضافة الى السلة'}</button>
         </div>
         ${p.outOfStock ? '<div class="out-of-stock">نفدت الكمية</div>' : ''}
       `;
@@ -959,6 +916,23 @@
     if(saved) cart = JSON.parse(saved);
   }
   
+  function loadUserOrdersFromLocal() {
+    const saved = localStorage.getItem(`userOrders_${userPhone}`);
+    if(saved) userOrders = JSON.parse(saved);
+    else userOrders = [];
+  }
+  
+  function saveUserOrderToLocal(orderData) {
+    if(!userPhone && !isBrowseMode) return;
+    const key = `userOrders_${userPhone}`;
+    const saved = localStorage.getItem(key);
+    let orders = saved ? JSON.parse(saved) : [];
+    orders.unshift(orderData);
+    if(orders.length > 50) orders = orders.slice(0, 50);
+    localStorage.setItem(key, JSON.stringify(orders));
+    userOrders = orders;
+  }
+  
   function showCart() {
     if(Object.keys(cart).length === 0) { alert("السلة فارغة"); return; }
     if(!userPhone && !isBrowseMode) { alert("يرجى بدء الطلب أولاً"); return; }
@@ -988,7 +962,6 @@
   function getSubtotal() { return Object.values(tempCart).reduce((s,i)=> s + i.price*i.qty,0); }
   function getTotal() { return getSubtotal() + getDeliveryPrice(); }
   
-  // ==================== خطوات الدفع + خريطة بنغازي (تفصيلية) ====================
   function showCheckoutStep(step) {
     checkoutData.step = step;
     const container = document.getElementById('stepContainer');
@@ -997,9 +970,9 @@
     const backBtn = document.getElementById('backBtn');
     backBtn.style.display = step > 1 ? 'block' : 'none';
     
-    if(step === 1) { /* ... نفس السابق ... */ 
+    if(step === 1) {
       stepTitle.innerText = "الخطوة 1 من 4 - نوع الطلب";
-      container.innerHTML = `<div style="display:flex; flex-direction:column; gap:16px;"><div class="payment-option" onclick="selectOrderType('delivery')" id="optDelivery"><span style="font-size:20px;">🚚</span><div><strong>توصيل</strong><br><small> توصيل الطلب إلى عنوانك</small></div></div><div class="payment-option" onclick="selectOrderType('takeaway')" id="optTakeaway"><span style="font-size:20px;">🗳️</span><div><strong>استلام من المطعم</strong><br><small>قم بالاستلام بنفسك من المطعم</small></div></div></div>`;
+      container.innerHTML = `<div style="display:flex; flex-direction:column; gap:16px;"><div class="payment-option" onclick="selectOrderType('delivery')" id="optDelivery"><span style="font-size:20px;">🚚</span><div><strong>توصيل</strong><br><small>توصيل الطلب إلى عنوانك</small></div></div><div class="payment-option" onclick="selectOrderType('takeaway')" id="optTakeaway"><span style="font-size:20px;">🗳️</span><div><strong>استلام من المطعم</strong><br><small>قم بالاستلام بنفسك من المطعم</small></div></div></div>`;
       nextBtn.innerText = "التالي";
       if(checkoutData.orderType === 'delivery') document.getElementById('optDelivery')?.classList.add('selected');
       else document.getElementById('optTakeaway')?.classList.add('selected');
@@ -1041,19 +1014,18 @@
     document.getElementById('checkoutPanel').style.display = 'flex';
   }
   
-  // خريطة تفصيلية بنغازي مع دبوس أخضر وبدون شعار OSM (تم إخفاء الأتربيوت)
   function initBenghaziMap() {
     const mapContainer = document.getElementById('map');
     if(!mapContainer) return;
     if(map) { map.remove(); map = null; }
     mapContainer.style.height = "350px";
     mapContainer.style.width = "100%";
-    const centerLat = 32.1167;   // إحداثيات بنغازي
+    const centerLat = 32.1167;
     const centerLng = 20.0667;
     try {
       map = L.map('map').setView([centerLat, centerLng], 12);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: ''   // إزالة الإسناد تماماً
+        attribution: ''
       }).addTo(map);
       
       if(marker) map.removeLayer(marker);
@@ -1081,6 +1053,7 @@
   
   function selectOrderType(type) { checkoutData.orderType = type; document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); if(type === 'delivery') document.getElementById('optDelivery')?.classList.add('selected'); else document.getElementById('optTakeaway')?.classList.add('selected'); }
   function selectPaymentMethod(name) { checkoutData.paymentMethod = name; document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); event.currentTarget.classList.add('selected'); }
+  
   function nextStep() {
     if(checkoutData.step === 1 && !checkoutData.orderType) { alert("يرجى اختيار نوع الطلب"); return; }
     if(checkoutData.step === 2) { const notes = document.getElementById('orderNotes')?.value || ''; checkoutData.notes = notes; }
@@ -1088,41 +1061,124 @@
     if(checkoutData.step === 4) { placeOrder(); return; }
     showCheckoutStep(checkoutData.step + 1);
   }
+  
   function prevStep() { if(checkoutData.step > 1) { showCheckoutStep(checkoutData.step - 1); if(checkoutData.step === 2 && checkoutData.orderType === 'delivery') setTimeout(() => initBenghaziMap(), 200); } }
   function closeCheckout() { document.getElementById('checkoutPanel').style.display = 'none'; if(map) { map.remove(); map = null; } }
   
-  // ==================== إرسال الطلب مع رابط جوجل مابس في حالة تحديد الموقع ====================
   function placeOrder() {
-    const subtotal = getSubtotal(); const delivery = getDeliveryPrice(); const finalTotal = getTotal();
+    const subtotal = getSubtotal(); 
+    const delivery = getDeliveryPrice(); 
+    const finalTotal = getTotal();
     const orderId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-    const orderData = {
-      userPhone, userArea, items: tempCart, subtotal, delivery, finalTotal,
-      orderType: checkoutData.orderType, paymentType: checkoutData.paymentMethod,
-      notes: checkoutData.notes, location: checkoutData.selectedLocation,
-      locationAddress: checkoutData.locationAddress, status: 'pending', createdAt: firebase.database.ServerValue.TIMESTAMP
+    const createdAt = Date.now();
+    
+    let itemsList = ''; 
+    Object.values(tempCart).forEach(i => { itemsList += `${i.qty} × ${i.name} (${i.price} د)\n`; });
+    
+    let googleMapsLink = '';
+    if(checkoutData.selectedLocation && checkoutData.orderType === 'delivery') {
+      const lat = checkoutData.selectedLocation.lat;
+      const lng = checkoutData.selectedLocation.lng;
+      googleMapsLink = `\n🗺️ *رابط موقع الزبون:*\nhttps://www.google.com/maps?q=${lat},${lng}\n`;
+    }
+    
+    const msg = `*🆕 طلب جديد من دجاج بوردو - شارع المركبات*\n━━━━━━━━━━━━━━━\n👤 *رقم العميل:* ${userPhone}\n📍 *المنطقة:* ${userArea}\n🚚 *نوع الطلب:* ${checkoutData.orderType === 'delivery' ? 'توصيل' : 'استلام شخصي'}\n💳 *طريقة الدفع:* ${checkoutData.paymentMethod || 'غير محدد'}\n━━━━━━━━━━━━━━━\n📦 *الطلبات:*\n${itemsList}\n━━━━━━━━━━━━━━━\n💰 *المجموع الفرعي:* ${subtotal} د\n🚚 *رسوم التوصيل:* ${delivery} د\n💎 *الإجمالي:* ${finalTotal} د\n━━━━━━━━━━━━━━━\n📝 *ملاحظات:* ${checkoutData.notes || 'لا يوجد'}${googleMapsLink}\n🆔 *رقم الطلب:* #${orderId.slice(-6)}`;
+    
+    const orderRecord = {
+      id: orderId,
+      items: tempCart,
+      subtotal: subtotal,
+      deliveryFee: delivery,
+      finalTotal: finalTotal,
+      orderType: checkoutData.orderType,
+      paymentMethod: checkoutData.paymentMethod,
+      notes: checkoutData.notes,
+      locationAddress: checkoutData.locationAddress,
+      createdAt: createdAt,
+      phone: userPhone,
+      area: userArea
     };
-    db.ref(`orders/${orderId}`).set(orderData).then(() => {
-      let itemsList = ''; Object.values(tempCart).forEach(i => { itemsList += `${i.qty} × ${i.name} (${i.price} د)\n`; });
-      let googleMapsLink = '';
-      if(checkoutData.selectedLocation && checkoutData.orderType === 'delivery') {
-        const lat = checkoutData.selectedLocation.lat;
-        const lng = checkoutData.selectedLocation.lng;
-        googleMapsLink = `\n🗺️ *رابط موقع الزبون:*\nhttps://www.google.com/maps?q=${lat},${lng}\n`;
-      }
-      const msg = `*🆕 طلب جديد من دجاج بوردو - شارع المركبات*\n━━━━━━━━━━━━━━━\n👤 *رقم العميل:* ${userPhone}\n📍 *المنطقة:* ${userArea}\n🚚 *نوع الطلب:* ${checkoutData.orderType === 'delivery' ? 'توصيل' : 'استلام شخصي'}\n💳 *طريقة الدفع:* ${checkoutData.paymentMethod || 'غير محدد'}\n━━━━━━━━━━━━━━━\n📦 *الطلبات:*\n${itemsList}\n━━━━━━━━━━━━━━━\n💰 *المجموع الفرعي:* ${subtotal} د\n🚚 *رسوم التوصيل:* ${delivery} د\n💎 *الإجمالي:* ${finalTotal} د\n━━━━━━━━━━━━━━━\n📝 *ملاحظات:* ${checkoutData.notes || 'لا يوجد'}${googleMapsLink}\n🆔 *رقم الطلب:* #${orderId.slice(-6)}`;
-      window.open(`https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
-      cart = {}; saveCartToStorage(); renderCartBadge(); closeCheckout();
-      showToast("✅ تم إرسال طلبك بنجاح!", "#28a745");
-      setTimeout(() => { alert("تم إرسال طلبك بنجاح!✅\nيمكنك متابعة حالة الطلب من قسم 'طلباتي'");
-      showOrdersTab(); }, 500);
-    }).catch(err => { alert("حدث خطأ: " + err.message); });
+    
+    saveUserOrderToLocal(orderRecord);
+    window.open(`https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    cart = {}; 
+    saveCartToStorage(); 
+    renderCartBadge(); 
+    closeCheckout();
+    showToast("✅ تم إرسال طلبك بنجاح!", "#28a745");
+    
+    setTimeout(() => { 
+      alert("تم إرسال طلبك بنجاح!✅\nيمكنك متابعة طلباتك السابقة من قسم 'طلباتي'");
+      showOrdersTab(); 
+    }, 500);
   }
   
-  function showOrdersTab() { document.getElementById('app').style.display = 'none'; document.getElementById('ordersPanel').style.display = 'block'; document.getElementById('bottomNav').style.display = 'flex'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('navOrders').classList.add('active'); loadOrders(); }
-  function showMenuTab() { document.getElementById('app').style.display = 'block'; document.getElementById('ordersPanel').style.display = 'none'; document.getElementById('bottomNav').style.display = 'flex'; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('navMenu').classList.add('active'); renderProducts(); }
-  function loadOrders() { const container = document.getElementById('ordersList'); if(!userPhone) { container.innerHTML = '<div style="text-align:center;padding:40px;">الرجاء تسجيل الدخول أولاً</div>'; return; } container.innerHTML = '<div style="text-align:center;padding:40px;">جاري التحميل...</div>'; db.ref('orders').orderByChild('userPhone').equalTo(userPhone).once('value', (snap) => { const orders = snap.val(); if(!orders) { container.innerHTML = '<div style="text-align:center;padding:40px;">لا توجد طلبات حالياً</div>'; return; } container.innerHTML = ''; const sorted = Object.keys(orders).map(k => ({ id: k, ...orders[k] })).sort((a,b) => (b.createdAt||0) - (a.createdAt||0)); sorted.forEach(order => { let itemsHtml = ''; if(order.items) Object.values(order.items).forEach(i => { itemsHtml += `${i.qty} × ${i.name}<br>`; }); const statusMap = { pending:'⏳ قيد الانتظار', preparing:'👨‍🍳 قيد التحضير', delivering:'🚚 في الطريق', delivered:'✅ تم التسليم', cancelled:'❌ ملغي' }; const statusText = statusMap[order.status] || order.status; const cancelBtn = (order.status !== 'delivered' && order.status !== 'cancelled') ? `<button class="cancel-order" onclick="cancelOrder('${order.id}')">إلغاء الطلب</button>` : ''; container.innerHTML += `<div class="order-card"><div style="display:flex; justify-content:space-between;"><span class="order-status status-${order.status}">${statusText}</span><span>#${order.id.slice(-6)}</span></div><div style="margin:12px 0; font-size:14px;">${itemsHtml}</div><div style="font-weight:bold;">الإجمالي: ${order.finalTotal || 0} دينار</div>${cancelBtn}<div style="font-size:11px; color:gray; margin-top:10px;">${new Date(order.createdAt).toLocaleString('ar')}</div></div>`; }); }); }
-  window.cancelOrder = function(orderId) { if(confirm('هل أنت متأكد من إلغاء هذا الطلب؟')) { db.ref(`orders/${orderId}`).update({ status: 'cancelled' }).then(() => { loadOrders(); }); } };
-  function showToast(msg, bg) { const t = document.createElement('div'); t.className = 'toast-msg'; t.innerText = msg; t.style.backgroundColor = bg; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
+  function showOrdersTab() { 
+    document.getElementById('app').style.display = 'none'; 
+    document.getElementById('ordersPanel').style.display = 'block'; 
+    document.getElementById('bottomNav').style.display = 'flex'; 
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+    document.getElementById('navOrders').classList.add('active'); 
+    loadOrders(); 
+  }
+  
+  function showMenuTab() { 
+    document.getElementById('app').style.display = 'block'; 
+    document.getElementById('ordersPanel').style.display = 'none'; 
+    document.getElementById('bottomNav').style.display = 'flex'; 
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+    document.getElementById('navMenu').classList.add('active'); 
+    renderProducts(); 
+  }
+  
+  function loadOrders() { 
+    const container = document.getElementById('ordersList'); 
+    if(!userPhone) { 
+      container.innerHTML = '<div style="text-align:center;padding:40px;">الرجاء تسجيل الدخول أولاً</div>'; 
+      return; 
+    }
+    
+    loadUserOrdersFromLocal();
+    
+    if(userOrders.length === 0) { 
+      container.innerHTML = '<div style="text-align:center;padding:40px;">لا توجد طلبات سابقة</div>'; 
+      return; 
+    }
+    
+    container.innerHTML = ''; 
+    
+    userOrders.forEach(order => { 
+      let itemsHtml = ''; 
+      if(order.items) {
+        Object.values(order.items).forEach(i => { 
+          itemsHtml += `${i.qty} × ${i.name}<br>`; 
+        });
+      }
+      const statusText = "✅ تم الإرسال";
+      
+      container.innerHTML += `
+        <div class="order-card">
+          <div style="display:flex; justify-content:space-between;">
+            <span class="order-status">${statusText}</span>
+            <span>#${order.id.slice(-6)}</span>
+          </div>
+          <div style="margin:12px 0; font-size:14px;">${itemsHtml}</div>
+          <div style="font-weight:bold;">الإجمالي: ${order.finalTotal || 0} دينار</div>
+          <div style="font-size:11px; color:gray; margin-top:10px;">${new Date(order.createdAt).toLocaleString('ar')}</div>
+        </div>
+      `;
+    });
+  }
+  
+  function showToast(msg, bg) { 
+    const t = document.createElement('div'); 
+    t.className = 'toast-msg'; 
+    t.innerText = msg; 
+    t.style.backgroundColor = bg; 
+    document.body.appendChild(t); 
+    setTimeout(() => t.remove(), 2000); 
+  }
 </script>
 </body>
 </html>
