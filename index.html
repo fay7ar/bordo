@@ -81,6 +81,7 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
+      overflow-y: auto;
     }
     .landing-card {
       background: white;
@@ -118,6 +119,11 @@
       border-radius: 12px;
       font-size: 15px;
       font-family: inherit;
+      transition: 0.2s;
+    }
+    .input-group input:focus, .input-group select:focus {
+      outline: none;
+      border-color: var(--primary);
     }
     .btn-group {
       display: flex;
@@ -139,6 +145,10 @@
       color: white;
     }
     .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .btn-outline {
       background: transparent;
       border: 1px solid var(--border);
@@ -149,6 +159,40 @@
       color: white;
     }
     .btn-secondary:hover { background: #5a6268; }
+    
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 12px;
+      color: var(--gray);
+    }
+    .small-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e9ecef;
+      border-top: 2px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 8px;
+      color: var(--primary);
+    }
+    .refresh-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
     
     .app-header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary));
@@ -580,9 +624,25 @@
       font-size: 14px;
       z-index: 4000;
       white-space: nowrap;
+      animation: fadeInUp 0.3s ease;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     }
     
     .hidden { display: none !important; }
+    
+    select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -596,13 +656,22 @@
   <div class="landing-card">
     <h2>دجاج بوردو - شارع المركبات</h2>
     <p>أهلاً بك! الرجاء إدخال رقم هاتفك واختيار منطقة التوصيل</p>
+    
     <div class="input-group">
       <label>📱 رقم الهاتف</label>
       <input type="tel" id="landingPhone" placeholder="0912345678" maxlength="10">
     </div>
     <div class="input-group">
-      <label>📍 منطقة التوصيل</label>
-      <select id="landingArea"></select>
+      <label>📍 منطقة التوصيل 
+        <button type="button" class="refresh-btn" id="refreshAreasBtn" onclick="refreshAreas()" style="display: none;">⟳ تحديث</button>
+      </label>
+      <select id="landingArea">
+        <option value="">جاري تحميل المناطق...</option>
+      </select>
+      <div id="areaLoadingIndicator" class="loading-indicator" style="display: flex;">
+        <div class="small-spinner"></div>
+        <span>جاري تحميل مناطق التوصيل...</span>
+      </div>
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" id="startBtn">بدء الطلب</button>
@@ -708,7 +777,8 @@
   let isBrowseMode = false;
   let productOrder = [];
   let activeCategory = "الكل";
-  let userOrders = []; // Local orders array for user's order history
+  let userOrders = [];
+  let areasLoaded = false;
   
   let checkoutData = {
     step: 1,
@@ -735,20 +805,35 @@
     shadowSize: [41, 41]
   });
   
+  // تحميل البيانات
   function loadData() {
+    let areasReceived = false;
+    
     db.ref('products').on('value', (s) => {
       allProducts = s.val() || {};
       updateCategories();
       renderProducts();
     });
+    
     db.ref('productOrder').on('value', (s) => {
       productOrder = s.val() || [];
       renderProducts();
     });
+    
     db.ref('deliveryAreas').on('value', (s) => {
       allAreas = s.val() || {};
+      areasReceived = true;
+      areasLoaded = true;
+      
+      // إخفاء مؤشر التحميل وإظهار المناطق
+      const loadingIndicator = document.getElementById('areaLoadingIndicator');
+      const refreshBtn = document.getElementById('refreshAreasBtn');
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      if (refreshBtn) refreshBtn.style.display = 'none';
+      
       fillAreaSelects();
     });
+    
     db.ref('paymentMethods').on('value', (s) => {
       const data = s.val() || {};
       paymentMethods = Object.values(data).filter(m => m.enabled !== false);
@@ -756,9 +841,48 @@
         paymentMethods = [{ name: "نقدي عند الإستلام", icon: "https://up6.cc/2026/04/177724255109191.png" }];
       }
     });
+    
+    // مؤقت لظهور زر التحديث إذا تأخر التحميل (بعد 5 ثواني)
+    setTimeout(() => {
+      if (!areasReceived) {
+        const loadingIndicator = document.getElementById('areaLoadingIndicator');
+        const refreshBtn = document.getElementById('refreshAreasBtn');
+        if (loadingIndicator) loadingIndicator.style.display = 'flex';
+        if (refreshBtn) refreshBtn.style.display = 'inline-block';
+      }
+    }, 5000);
+    
     loadCartFromStorage();
-    loadUserOrdersFromLocal(); // Load saved orders from localStorage
+    loadUserOrdersFromLocal();
   }
+  
+  // دالة تحديث المناطق يدوياً
+  window.refreshAreas = function() {
+    const loadingIndicator = document.getElementById('areaLoadingIndicator');
+    const refreshBtn = document.getElementById('refreshAreasBtn');
+    const areaSelect = document.getElementById('landingArea');
+    
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'flex';
+      loadingIndicator.innerHTML = '<div class="small-spinner"></div><span>جاري تحميل مناطق التوصيل...</span>';
+    }
+    if (refreshBtn) refreshBtn.style.display = 'none';
+    if (areaSelect) areaSelect.innerHTML = '<option value="">جاري تحميل المناطق...</option>';
+    
+    db.ref('deliveryAreas').once('value', (s) => {
+      allAreas = s.val() || {};
+      fillAreaSelects();
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      if (refreshBtn) refreshBtn.style.display = 'none';
+      showToast("✅ تم تحديث المناطق بنجاح", "#28a745");
+    }).catch((error) => {
+      if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+      }
+      if (refreshBtn) refreshBtn.style.display = 'inline-block';
+      showToast("❌ فشل التحديث، حاول مرة أخرى", "#dc3545");
+    });
+  };
   
   function updateCategories() {
     const cats = new Set();
@@ -770,23 +894,39 @@
   function fillAreaSelects() {
     const landingSelect = document.getElementById('landingArea');
     const headerSelect = document.getElementById('areaSelect');
+    
+    if (!landingSelect) return;
+    
+    if (Object.keys(allAreas).length === 0) {
+      landingSelect.innerHTML = '<option value="">لا توجد مناطق متاحة</option>';
+      if (headerSelect) headerSelect.innerHTML = '<option value="">لا توجد مناطق متاحة</option>';
+      return;
+    }
+    
     landingSelect.innerHTML = '<option value="">اختر المنطقة</option>';
-    headerSelect.innerHTML = '<option value="">اختر المنطقة</option>';
+    if (headerSelect) headerSelect.innerHTML = '<option value="">اختر المنطقة</option>';
+    
     Object.values(allAreas).forEach(a => {
-      landingSelect.innerHTML += `<option value="${a.name}">${a.name}</option>`;
-      headerSelect.innerHTML += `<option value="${a.name}">${a.name}</option>`;
+      if (a && a.name) {
+        landingSelect.innerHTML += `<option value="${a.name}">${a.name}</option>`;
+        if (headerSelect) headerSelect.innerHTML += `<option value="${a.name}">${a.name}</option>`;
+      }
     });
-    if(userArea) {
-      landingSelect.value = userArea;
-      headerSelect.value = userArea;
+    
+    // استعادة المنطقة المحفوظة
+    const savedArea = localStorage.getItem('userArea');
+    if (savedArea && Object.values(allAreas).some(a => a.name === savedArea)) {
+      landingSelect.value = savedArea;
+      if (headerSelect) headerSelect.value = savedArea;
+      userArea = savedArea;
     }
   }
   
   window.onload = () => {
     loadData();
     const savedPhone = localStorage.getItem('userPhone');
-    const savedArea = localStorage.getItem('userArea');
     if(savedPhone) document.getElementById('landingPhone').value = savedPhone;
+    
     setTimeout(() => {
       document.getElementById('splash').style.opacity = '0';
       setTimeout(() => {
@@ -798,14 +938,26 @@
   
   document.getElementById('startBtn').onclick = () => {
     const phone = document.getElementById('landingPhone').value.trim();
-    const area = document.getElementById('landingArea').value;
-    if(!phone || phone.length < 10) { alert("يرجى إدخال رقم هاتف صحيح"); return; }
-    if(!area) { alert("يرجى اختيار منطقة التوصيل"); return; }
+    const areaSelect = document.getElementById('landingArea');
+    const area = areaSelect.value;
+    
+    if(!phone || phone.length < 10) { 
+      showToast("يرجى إدخال رقم هاتف صحيح", "#dc3545");
+      return; 
+    }
+    if(!area || area === "") { 
+      showToast("يرجى اختيار منطقة التوصيل", "#dc3545");
+      return; 
+    }
+    
     userPhone = phone;
     userArea = area;
     isBrowseMode = false;
+    
+    // حفظ البيانات في localStorage
     localStorage.setItem('userPhone', userPhone);
     localStorage.setItem('userArea', userArea);
+    
     startApp();
   };
   
@@ -821,6 +973,7 @@
     document.getElementById('app').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('ordersPanel').style.display = 'none';
+    
     if(isBrowseMode) {
       document.getElementById('areaSelect').disabled = true;
     } else {
@@ -829,6 +982,7 @@
     }
     renderCartBadge();
     renderProducts();
+    loadUserOrdersFromLocal();
   }
   
   function renderProducts() {
@@ -865,7 +1019,7 @@
       card.innerHTML = `
         <img class="product-img" src="${p.image || UNIFIED_IMAGE}" onerror="this.src='${UNIFIED_IMAGE}'">
         <div class="product-info">
-          <div class="product-name">${p.name}</div>
+          <div class="product-name">${escapeHtml(p.name)}</div>
           <div class="product-price">${p.price} دينار</div>
           <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.id}')" ${p.outOfStock ? 'disabled' : ''}>${p.outOfStock ? 'نفدت' : 'إضافة الى السلة'}</button>
         </div>
@@ -873,6 +1027,12 @@
       `;
       grid.appendChild(card);
     });
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   
   function renderCategories() {
@@ -891,7 +1051,7 @@
   document.getElementById('searchInput')?.addEventListener('input', () => renderProducts());
   
   function addToCart(id) {
-    if(isBrowseMode) { alert("الرجاء بدء الطلب أولاً"); return; }
+    if(isBrowseMode) { showToast("الرجاء بدء الطلب أولاً", "#dc3545"); return; }
     const p = allProducts[id];
     if(!p || p.outOfStock) return;
     if(!cart[id]) cart[id] = { ...p, id, qty: 0 };
@@ -917,6 +1077,7 @@
   }
   
   function loadUserOrdersFromLocal() {
+    if(!userPhone) return;
     const saved = localStorage.getItem(`userOrders_${userPhone}`);
     if(saved) userOrders = JSON.parse(saved);
     else userOrders = [];
@@ -934,8 +1095,8 @@
   }
   
   function showCart() {
-    if(Object.keys(cart).length === 0) { alert("السلة فارغة"); return; }
-    if(!userPhone && !isBrowseMode) { alert("يرجى بدء الطلب أولاً"); return; }
+    if(Object.keys(cart).length === 0) { showToast("السلة فارغة", "#dc3545"); return; }
+    if(!userPhone && !isBrowseMode) { showToast("يرجى بدء الطلب أولاً", "#dc3545"); return; }
     tempCart = JSON.parse(JSON.stringify(cart));
     checkoutData = { step: 1, orderType: "delivery", selectedLocation: null, locationAddress: "", paymentMethod: null, notes: "" };
     showCheckoutStep(1);
@@ -1003,12 +1164,12 @@
       stepTitle.innerText = "الخطوة 4 من 4 - تأكيد الطلب";
       const subtotal = getSubtotal(); const delivery = getDeliveryPrice(); const total = getTotal();
       let itemsHtml = '<div class="items-list">';
-      Object.values(tempCart).forEach(item => { itemsHtml += `<div class="item-row"><span>${item.qty} × ${item.name}</span><span>${item.price * item.qty} د</span></div>`; });
+      Object.values(tempCart).forEach(item => { itemsHtml += `<div class="item-row"><span>${item.qty} × ${escapeHtml(item.name)}</span><span>${item.price * item.qty} د</span></div>`; });
       itemsHtml += '</div>';
       const orderTypeText = checkoutData.orderType === 'delivery' ? '🚚 توصيل' : '🗳️ استلام من المطعم';
       const paymentText = checkoutData.paymentMethod || 'لم يتم الاختيار';
       const locationText = checkoutData.locationAddress ? checkoutData.locationAddress.substring(0, 80) : (checkoutData.orderType === 'delivery' ? 'لم يتم تحديد موقع' : 'استلام شخصي');
-      container.innerHTML = `<div class="order-summary-card"><h3 style="margin-bottom:12px;">📋 ملخص الطلب</h3>${itemsHtml}<div class="summary-row"><span>المجموع الفرعي</span><span>${subtotal} د</span></div><div class="summary-row"><span>رسوم التوصيل</span><span>${delivery} د</span></div><div class="summary-row total"><span>الإجمالي</span><span>${total} د</span></div></div><div class="order-summary-card"><h3 style="margin-bottom:12px;">ℹ️ معلومات الطلب</h3><div class="summary-row"><span>نوع الطلب</span><span>${orderTypeText}</span></div><div class="summary-row"><span>منطقة التوصيل</span><span>${userArea || 'غير محدد'}</span></div><div class="summary-row"><span>طريقة الدفع</span><span>${paymentText}</span></div><div class="summary-row"><span>الموقع</span><span style="font-size:12px;">${locationText}</span></div>${checkoutData.notes ? `<div class="summary-row"><span>ملاحظات</span><span style="font-size:12px;">${checkoutData.notes}</span></div>` : ''}</div><div class="order-summary-card" style="background:#e8f5e9;"><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:28px;">📞</span><div><strong>رقم الهاتف: ${userPhone}</strong><br><small>سيتم التواصل معك لتأكيد الطلب</small></div></div></div>`;
+      container.innerHTML = `<div class="order-summary-card"><h3 style="margin-bottom:12px;">📋 ملخص الطلب</h3>${itemsHtml}<div class="summary-row"><span>المجموع الفرعي</span><span>${subtotal} د</span></div><div class="summary-row"><span>رسوم التوصيل</span><span>${delivery} د</span></div><div class="summary-row total"><span>الإجمالي</span><span>${total} د</span></div></div><div class="order-summary-card"><h3 style="margin-bottom:12px;">ℹ️ معلومات الطلب</h3><div class="summary-row"><span>نوع الطلب</span><span>${orderTypeText}</span></div><div class="summary-row"><span>منطقة التوصيل</span><span>${userArea || 'غير محدد'}</span></div><div class="summary-row"><span>طريقة الدفع</span><span>${paymentText}</span></div><div class="summary-row"><span>الموقع</span><span style="font-size:12px;">${escapeHtml(locationText)}</span></div>${checkoutData.notes ? `<div class="summary-row"><span>ملاحظات</span><span style="font-size:12px;">${escapeHtml(checkoutData.notes)}</span></div>` : ''}</div><div class="order-summary-card" style="background:#e8f5e9;"><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:28px;">📞</span><div><strong>رقم الهاتف: ${userPhone}</strong><br><small>سيتم التواصل معك لتأكيد الطلب</small></div></div></div>`;
       nextBtn.innerText = "تأكيد وإرسال الطلب ✅";
     }
     document.getElementById('checkoutPanel').style.display = 'flex';
@@ -1051,19 +1212,41 @@
     } catch(e) { console.error(e); mapContainer.innerHTML = '<div style="text-align:center;padding:50px;">⚠️ خطأ بالخريطة، يمكنك المتابعة بدون تحديد</div>'; }
   }
   
-  function selectOrderType(type) { checkoutData.orderType = type; document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); if(type === 'delivery') document.getElementById('optDelivery')?.classList.add('selected'); else document.getElementById('optTakeaway')?.classList.add('selected'); }
-  function selectPaymentMethod(name) { checkoutData.paymentMethod = name; document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); event.currentTarget.classList.add('selected'); }
+  function selectOrderType(type) { 
+    checkoutData.orderType = type; 
+    document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); 
+    if(type === 'delivery') document.getElementById('optDelivery')?.classList.add('selected'); 
+    else document.getElementById('optTakeaway')?.classList.add('selected'); 
+  }
+  
+  function selectPaymentMethod(name) { 
+    checkoutData.paymentMethod = name; 
+    document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); 
+    if(event && event.currentTarget) event.currentTarget.classList.add('selected');
+  }
   
   function nextStep() {
-    if(checkoutData.step === 1 && !checkoutData.orderType) { alert("يرجى اختيار نوع الطلب"); return; }
-    if(checkoutData.step === 2) { const notes = document.getElementById('orderNotes')?.value || ''; checkoutData.notes = notes; }
-    if(checkoutData.step === 3 && !checkoutData.paymentMethod) { alert("يرجى اختيار طريقة الدفع"); return; }
+    if(checkoutData.step === 1 && !checkoutData.orderType) { showToast("يرجى اختيار نوع الطلب", "#dc3545"); return; }
+    if(checkoutData.step === 2) { 
+      const notes = document.getElementById('orderNotes')?.value || ''; 
+      checkoutData.notes = notes; 
+    }
+    if(checkoutData.step === 3 && !checkoutData.paymentMethod) { showToast("يرجى اختيار طريقة الدفع", "#dc3545"); return; }
     if(checkoutData.step === 4) { placeOrder(); return; }
     showCheckoutStep(checkoutData.step + 1);
   }
   
-  function prevStep() { if(checkoutData.step > 1) { showCheckoutStep(checkoutData.step - 1); if(checkoutData.step === 2 && checkoutData.orderType === 'delivery') setTimeout(() => initBenghaziMap(), 200); } }
-  function closeCheckout() { document.getElementById('checkoutPanel').style.display = 'none'; if(map) { map.remove(); map = null; } }
+  function prevStep() { 
+    if(checkoutData.step > 1) { 
+      showCheckoutStep(checkoutData.step - 1); 
+      if(checkoutData.step === 2 && checkoutData.orderType === 'delivery') setTimeout(() => initBenghaziMap(), 200); 
+    } 
+  }
+  
+  function closeCheckout() { 
+    document.getElementById('checkoutPanel').style.display = 'none'; 
+    if(map) { map.remove(); map = null; } 
+  }
   
   function placeOrder() {
     const subtotal = getSubtotal(); 
@@ -1100,18 +1283,33 @@
     };
     
     saveUserOrderToLocal(orderRecord);
-    window.open(`https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    // ✅ التعديل المهم: استخدام window.location.href بدلاً من window.open لحل مشكلة iOS
+    const whatsappUrl = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+    
+    // كشف نظام التشغيل
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    if (isIOS) {
+      // iOS: استخدام window.location.href مباشرة
+      window.location.href = whatsappUrl;
+    } else {
+      // Android وويندوز: فتح في نافذة جديدة
+      window.open(whatsappUrl, '_blank');
+    }
     
     cart = {}; 
     saveCartToStorage(); 
     renderCartBadge(); 
     closeCheckout();
-    showToast("✅ تم إرسال طلبك بنجاح!", "#28a745");
+    showToast("✅ تم إرسال طلبك بنجاح! جاري فتح واتساب...", "#28a745");
     
     setTimeout(() => { 
-      alert("تم إرسال طلبك بنجاح!✅\nيمكنك متابعة طلباتك السابقة من قسم 'طلباتي'");
+      if (!isIOS) {
+        alert("تم إرسال طلبك بنجاح!✅\nيمكنك متابعة طلباتك السابقة من قسم 'طلباتي'");
+      }
       showOrdersTab(); 
-    }, 500);
+    }, 1000);
   }
   
   function showOrdersTab() { 
@@ -1152,7 +1350,7 @@
       let itemsHtml = ''; 
       if(order.items) {
         Object.values(order.items).forEach(i => { 
-          itemsHtml += `${i.qty} × ${i.name}<br>`; 
+          itemsHtml += `${i.qty} × ${escapeHtml(i.name)}<br>`; 
         });
       }
       const statusText = "✅ تم الإرسال";
@@ -1177,7 +1375,9 @@
     t.innerText = msg; 
     t.style.backgroundColor = bg; 
     document.body.appendChild(t); 
-    setTimeout(() => t.remove(), 2000); 
+    setTimeout(() => {
+      if(t && t.remove) t.remove();
+    }, 2500); 
   }
 </script>
 </body>
