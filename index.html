@@ -1,1384 +1,322 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>دجاج بوردو</title>
-  
-  <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
-  
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8f9fa;
-      color: #1f2937;
-      padding-bottom: 75px;
-    }
-    
-    :root {
-      --primary: #28a745;
-      --primary-dark: #1d7a33;
-      --secondary: #ffc107;
-      --danger: #dc3545;
-      --dark: #1f2937;
-      --light: #f8f9fa;
-      --gray: #6c757d;
-      --border: #e9ecef;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    
-    #splash {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: white;
-      z-index: 10000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      transition: opacity 0.5s;
-    }
-    #splash img {
-      width: 120px;
-      border-radius: 20px;
-      margin-bottom: 20px;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e9ecef;
-      border-top: 4px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    #landingPage {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--light);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    .landing-card {
-      background: white;
-      border-radius: 24px;
-      padding: 32px 24px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-    .landing-card h2 {
-      color: var(--primary-dark);
-      margin-bottom: 12px;
-    }
-    .landing-card p {
-      color: var(--gray);
-      margin-bottom: 24px;
-      font-size: 14px;
-    }
-    .input-group {
-      text-align: right;
-      margin-bottom: 16px;
-    }
-    .input-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: var(--dark);
-    }
-    .input-group input, .input-group select, .input-group textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-size: 15px;
-      font-family: inherit;
-      transition: 0.2s;
-    }
-    .input-group input:focus, .input-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    .btn-group {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
-    .btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-primary:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--dark);
-    }
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
-    .btn-secondary:hover { background: #5a6268; }
-    
-    .loading-indicator {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 8px;
-      padding: 8px 0;
-      font-size: 12px;
-      color: var(--gray);
-    }
-    .small-spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid #e9ecef;
-      border-top: 2px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-    
-    .refresh-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      margin-right: 8px;
-      color: var(--primary);
-    }
-    .refresh-btn:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-    
-    .app-header {
-      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-      color: white;
-      padding: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .logo-area h1 {
-      font-size: 18px;
-    }
-    .logo-area small {
-      font-size: 11px;
-      opacity: 0.8;
-    }
-    .cart-icon {
-      position: relative;
-      cursor: pointer;
-      background: rgba(255,255,255,0.2);
-      padding: 8px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .cart-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: var(--danger);
-      color: white;
-      font-size: 10px;
-      font-weight: bold;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-    }
-    .search-area {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .area-select {
-      background: rgba(255,255,255,0.2);
-      border: none;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 24px;
-      font-size: 13px;
-      width: 40%;
-    }
-    .area-select option { background: var(--primary-dark); }
-    .search-input {
-      flex: 1;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 24px;
-      font-size: 13px;
-    }
-    
-    .categories {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding: 12px 16px;
-      background: white;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .category-chip {
-      padding: 8px 18px;
-      background: #f1f3f5;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .category-chip.active {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 14px;
-      padding: 16px;
-    }
-    .product-card {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: transform 0.2s;
-      position: relative;
-    }
-    .product-card:hover { transform: translateY(-3px); }
-    .product-img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      background: #f1f3f5;
-    }
-    .product-info {
-      padding: 12px;
-    }
-    .product-name {
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .product-price {
-      color: var(--primary);
-      font-weight: 700;
-      font-size: 15px;
-      margin: 6px 0;
-    }
-    .add-btn {
-      width: 100%;
-      padding: 8px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 30px;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .add-btn:disabled {
-      background: var(--gray);
-      opacity: 0.6;
-    }
-    .out-of-stock {
-      background: rgba(0,0,0,0.7);
-      color: white;
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 20px;
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-    
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      z-index: 2000;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .modal-content {
-      background: white;
-      border-radius: 24px;
-      max-width: 400px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .modal-img {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-    }
-    .modal-body {
-      padding: 20px;
-    }
-    .modal-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .modal-price {
-      font-size: 24px;
-      color: var(--primary);
-      font-weight: 700;
-      margin: 12px 0;
-    }
-    .modal-desc {
-      color: var(--gray);
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .modal-actions {
-      display: flex;
-      gap: 12px;
-    }
-    .modal-actions .btn { flex: 1; }
-    .close-modal {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 24px;
-    }
-    
-    .checkout-steps {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: white;
-      z-index: 3000;
-      overflow-y: auto;
-      display: none;
-      flex-direction: column;
-    }
-    .checkout-header {
-      background: var(--primary);
-      color: white;
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: sticky;
-      top: 0;
-    }
-    .back-btn {
-      background: rgba(255,255,255,0.2);
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 20px;
-      color: white;
-    }
-    .step-title {
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .step-content {
-      padding: 20px;
-      flex: 1;
-    }
-    .step-footer {
-      padding: 16px;
-      border-top: 1px solid var(--border);
-      background: white;
-      display: flex;
-      gap: 12px;
-    }
-    .step-footer .btn {
-      flex: 1;
-    }
-    
-    .payment-methods {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .payment-option {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 15px;
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .payment-option.selected {
-      border-color: var(--primary);
-      background: #e8f5e9;
-    }
-    .payment-icon {
-      width: 45px;
-      height: 45px;
-      object-fit: contain;
-    }
-    .payment-name {
-      font-weight: 600;
-      font-size: 16px;
-    }
-    
-    #map {
-      height: 400px;
-      width: 100%;
-      border-radius: 16px;
-      margin-bottom: 16px;
-      background: #e9ecef;
-      z-index: 1;
-    }
-    .leaflet-control-attribution {
-      display: none !important;
-    }
-    .leaflet-bottom.leaflet-right {
-      display: none !important;
-    }
-    .location-info {
-      background: #f1f3f5;
-      padding: 12px;
-      border-radius: 12px;
-      margin-top: 12px;
-      font-size: 13px;
-    }
-    
-    .order-summary-card {
-      background: #f8f9fa;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .summary-row.total {
-      font-weight: bold;
-      font-size: 18px;
-      color: var(--primary);
-      border-bottom: none;
-      margin-top: 8px;
-      padding-top: 12px;
-    }
-    .items-list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .item-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      font-size: 14px;
-    }
-    
-    .orders-container {
-      padding: 16px;
-    }
-    .order-card {
-      background: white;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: var(--shadow);
-      border-right: 4px solid var(--primary);
-    }
-    .order-status {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: white;
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-      border-top: 1px solid var(--border);
-      z-index: 99;
-    }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      color: var(--gray);
-      transition: 0.2s;
-    }
-    .nav-item.active {
-      color: var(--primary);
-    }
-    .nav-item svg {
-      width: 24px;
-      height: 24px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-    }
-    .nav-item span {
-      font-size: 11px;
-      font-weight: 500;
-    }
-    
-    .toast-msg {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--dark);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 40px;
-      font-size: 14px;
-      z-index: 4000;
-      white-space: nowrap;
-      animation: fadeInUp 0.3s ease;
-    }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-    
-    .hidden { display: none !important; }
-    
-    select:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>عذراً - الموقع خارج الخدمة</title>
+    <style>
+        /* Reset and base styling - White page, clean and minimal */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* smooth interaction, subtle but keeps clean */
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #ffffff; /* بيضاء نقية */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Tahoma', 'Geneva', 'Verdana', sans-serif;
+            direction: rtl;
+            padding: 1.5rem;
+            margin: 0;
+            /* soft entrance for body itself (optional subtlety) */
+            animation: bodyFadeIn 0.6s ease-out;
+        }
+
+        /* main container - centers content vertically and horizontally */
+        .interactive-container {
+            text-align: center;
+            max-width: 90%;
+            width: 100%;
+            background: transparent; /* stays white context */
+        }
+
+        /* Style for first message: "نعتذر منك😔" - BLACK, interactive fade from invisible to visible */
+        .apology-message {
+            font-size: clamp(2.2rem, 8vw, 4rem);
+            font-weight: 650;
+            color: #000000; /* أسود خالص */
+            letter-spacing: -0.02em;
+            margin-bottom: 1.2rem;
+            opacity: 0; /* start completely hidden (من الإختفاء) */
+            transform: translateY(12px);
+            transition: opacity 0.85s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.7s ease-out;
+            will-change: opacity, transform;
+            line-height: 1.3;
+            text-shadow: none;
+        }
+
+        /* when the 'visible' class is added, the message appears smoothly */
+        .apology-message.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Second message: "الموقع خارج الخدمة حالياً" - أخضر، يظهر بعد الجملة الاولى بتأخير تفاعلي */
+        .status-message {
+            font-size: clamp(1.3rem, 5vw, 2rem);
+            font-weight: 500;
+            color: #2e7d32; /* لون اخضر غامق وجذاب (green) */
+            background-color: transparent;
+            margin-top: 1rem;
+            padding: 0.6rem 1rem;
+            display: inline-block;
+            border-radius: 48px;
+            letter-spacing: -0.3px;
+            opacity: 0;
+            transform: scale(0.96);
+            transition: opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1), transform 0.5s ease;
+            will-change: opacity, transform;
+            backdrop-filter: blur(0px);
+            font-weight: 540;
+        }
+
+        /* visible state for status message appears after first message is visible & specific delay */
+        .status-message.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* optional soft decorative element: subtle glow or smile, but remains minimalist */
+        .support-emoji {
+            display: inline-block;
+            margin-top: 2rem;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.4s ease 1.5s;
+            color: #a0a0a0;
+            font-weight: 300;
+        }
+
+        /* when both messages loaded, show a tiny friendly footer note? but not intrusive */
+        .support-emoji.show {
+            opacity: 0.5;
+        }
+
+        /* Responsive fine-tuning */
+        @media (max-width: 560px) {
+            .apology-message {
+                margin-bottom: 0.8rem;
+            }
+            .status-message {
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        /* Very subtle body fade to make entrance gentle */
+        @keyframes bodyFadeIn {
+            0% {
+                background-color: #fefefe;
+                opacity: 0.99;
+            }
+            100% {
+                background-color: #ffffff;
+            }
+        }
+
+        /* optional extra flair: smooth cursor interaction for container */
+        .interactive-container {
+            cursor: default;
+        }
+
+        /* no outline glitches */
+        :focus-visible {
+            outline: none;
+        }
+    </style>
 </head>
 <body>
 
-<div id="splash">
-  <img src="https://www2.0zz0.com/2025/12/09/18/567526201.png" alt="Logo">
-  <div class="spinner"></div>
-</div>
-
-<div id="landingPage">
-  <div class="landing-card">
-    <h2>دجاج بوردو - شارع المركبات</h2>
-    <p>أهلاً بك! الرجاء إدخال رقم هاتفك واختيار منطقة التوصيل</p>
+<div class="interactive-container">
+    <!-- الجملة الأولى: نعتذر منك😔 باللون الاسود - تبدأ مخفية ثم تظهر بشكل تفاعلي -->
+    <div id="apologyMsg" class="apology-message">نعتذر منك😔</div>
     
-    <div class="input-group">
-      <label>📱 رقم الهاتف</label>
-      <input type="tel" id="landingPhone" placeholder="0912345678" maxlength="10">
-    </div>
-    <div class="input-group">
-      <label>📍 منطقة التوصيل 
-        <button type="button" class="refresh-btn" id="refreshAreasBtn" onclick="refreshAreas()" style="display: none;">⟳ تحديث</button>
-      </label>
-      <select id="landingArea">
-        <option value="">جاري تحميل المناطق...</option>
-      </select>
-      <div id="areaLoadingIndicator" class="loading-indicator" style="display: flex;">
-        <div class="small-spinner"></div>
-        <span>جاري تحميل مناطق التوصيل...</span>
-      </div>
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-primary" id="startBtn">بدء الطلب</button>
-      <button class="btn btn-outline" id="browseBtn">تصفح المنيو</button>
-    </div>
-  </div>
-</div>
-
-<div id="app" style="display: none;">
-  <div class="app-header">
-    <div class="header-row">
-      <div class="logo-area">
-        <h1>دجاج بوردو</h1>
-      </div>
-      <div class="cart-icon" onclick="showCart()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
-        </svg>
-        <div class="cart-badge" id="cartBadge">0</div>
-      </div>
-    </div>
-    <div class="search-area">
-      <select id="areaSelect" class="area-select"></select>
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 بحث عن وجبة...">
-    </div>
-  </div>
-  
-  <div class="categories" id="categoriesList"></div>
-  <div class="products-grid" id="productsGrid"></div>
-</div>
-
-<div id="bottomNav" class="bottom-nav" style="display: none;">
-  <div class="nav-item active" onclick="showMenuTab()" id="navMenu">
-    <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-    <span>المنيو</span>
-  </div>
-  <div class="nav-item" onclick="showOrdersTab()" id="navOrders">
-    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-    <span>طلباتي</span>
-  </div>
-</div>
-
-<div id="ordersPanel" style="display: none; padding-bottom: 80px;">
-  <div class="app-header" style="position: sticky; top: 0;">
-    <div class="header-row">
-      <div class="logo-area"><h1>طلباتي</h1></div>
-      <div class="cart-icon" onclick="showMenuTab()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-      </div>
-    </div>
-  </div>
-  <div class="orders-container" id="ordersList"></div>
-</div>
-
-<div id="productModal" class="modal">
-  <div class="close-modal" onclick="closeProductModal()">✕</div>
-  <div class="modal-content">
-    <img id="modalImg" class="modal-img" src="">
-    <div class="modal-body">
-      <div class="modal-title" id="modalName"></div>
-      <div class="modal-price" id="modalPrice"></div>
-      <div class="modal-desc" id="modalDesc"></div>
-      <div class="modal-actions">
-        <button class="btn btn-primary" id="modalAddBtn" onclick="addCurrentProductToCart()">إضافة الى السلة</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="checkoutPanel" class="checkout-steps">
-  <div class="checkout-header">
-    <button class="back-btn" onclick="closeCheckout()">→</button>
-    <span class="step-title" id="stepTitle">الخطوة 1 من 4</span>
-  </div>
-  <div id="stepContainer" class="step-content"></div>
-  <div class="step-footer">
-    <button class="btn btn-secondary" id="backBtn" onclick="prevStep()" style="display: none;">السابق</button>
-    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">التالي</button>
-  </div>
+    <!-- الجملة الثانية: الموقع خارج الخدمة حالياً - باللون الاخضر، تظهر بعد الجملة الاولى -->
+    <div id="statusMsg" class="status-message">الموقع خارج الخدمة حالياً</div>
+    
+    <!-- عنصر إضافي بسيط اختياري لإحساس لطيف لكن بدون تأثير على الشرط الأساسي -->
+    <div id="extraFade" class="support-emoji">✨ شكراً لتفهمك ✨</div>
 </div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyC1cXTxqehGPW5EBjEf2vVsXtA7FyDe3R8",
-    authDomain: "bordo-911.firebaseapp.com",
-    databaseURL: "https://bordo-911-default-rtdb.firebaseio.com",
-    projectId: "bordo-911",
-    storageBucket: "bordo-911.firebasestorage.app",
-    messagingSenderId: "616521600914",
-    appId: "1:616521600914:web:88f63073acc777a5a43b4b"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  
-  let allProducts = {};
-  let allCategories = ["الكل"];
-  let allAreas = {};
-  let paymentMethods = [];
-  let cart = {};
-  let userPhone = "";
-  let userArea = "";
-  let isBrowseMode = false;
-  let productOrder = [];
-  let activeCategory = "الكل";
-  let userOrders = [];
-  let areasLoaded = false;
-  
-  let checkoutData = {
-    step: 1,
-    orderType: "delivery",
-    selectedLocation: null,
-    locationAddress: "",
-    paymentMethod: null,
-    notes: ""
-  };
-  let tempCart = {};
-  let map = null;
-  let marker = null;
-  let currentProduct = null;
-  
-  const RESTAURANT_WHATSAPP = "218919593444";
-  const UNIFIED_IMAGE = "https://up6.cc/2025/10/176460585993361.jpg";
-  
-  const greenIcon = L.icon({
-    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
-  
-  // تحميل البيانات
-  function loadData() {
-    let areasReceived = false;
-    
-    db.ref('products').on('value', (s) => {
-      allProducts = s.val() || {};
-      updateCategories();
-      renderProducts();
-    });
-    
-    db.ref('productOrder').on('value', (s) => {
-      productOrder = s.val() || [];
-      renderProducts();
-    });
-    
-    db.ref('deliveryAreas').on('value', (s) => {
-      allAreas = s.val() || {};
-      areasReceived = true;
-      areasLoaded = true;
-      
-      // إخفاء مؤشر التحميل وإظهار المناطق
-      const loadingIndicator = document.getElementById('areaLoadingIndicator');
-      const refreshBtn = document.getElementById('refreshAreasBtn');
-      if (loadingIndicator) loadingIndicator.style.display = 'none';
-      if (refreshBtn) refreshBtn.style.display = 'none';
-      
-      fillAreaSelects();
-    });
-    
-    db.ref('paymentMethods').on('value', (s) => {
-      const data = s.val() || {};
-      paymentMethods = Object.values(data).filter(m => m.enabled !== false);
-      if(paymentMethods.length === 0) {
-        paymentMethods = [{ name: "نقدي عند الإستلام", icon: "https://up6.cc/2026/04/177724255109191.png" }];
-      }
-    });
-    
-    // مؤقت لظهور زر التحديث إذا تأخر التحميل (بعد 5 ثواني)
-    setTimeout(() => {
-      if (!areasReceived) {
-        const loadingIndicator = document.getElementById('areaLoadingIndicator');
-        const refreshBtn = document.getElementById('refreshAreasBtn');
-        if (loadingIndicator) loadingIndicator.style.display = 'flex';
-        if (refreshBtn) refreshBtn.style.display = 'inline-block';
-      }
-    }, 5000);
-    
-    loadCartFromStorage();
-    loadUserOrdersFromLocal();
-  }
-  
-  // دالة تحديث المناطق يدوياً
-  window.refreshAreas = function() {
-    const loadingIndicator = document.getElementById('areaLoadingIndicator');
-    const refreshBtn = document.getElementById('refreshAreasBtn');
-    const areaSelect = document.getElementById('landingArea');
-    
-    if (loadingIndicator) {
-      loadingIndicator.style.display = 'flex';
-      loadingIndicator.innerHTML = '<div class="small-spinner"></div><span>جاري تحميل مناطق التوصيل...</span>';
-    }
-    if (refreshBtn) refreshBtn.style.display = 'none';
-    if (areaSelect) areaSelect.innerHTML = '<option value="">جاري تحميل المناطق...</option>';
-    
-    db.ref('deliveryAreas').once('value', (s) => {
-      allAreas = s.val() || {};
-      fillAreaSelects();
-      if (loadingIndicator) loadingIndicator.style.display = 'none';
-      if (refreshBtn) refreshBtn.style.display = 'none';
-      showToast("✅ تم تحديث المناطق بنجاح", "#28a745");
-    }).catch((error) => {
-      if (loadingIndicator) {
-        loadingIndicator.style.display = 'none';
-      }
-      if (refreshBtn) refreshBtn.style.display = 'inline-block';
-      showToast("❌ فشل التحديث، حاول مرة أخرى", "#dc3545");
-    });
-  };
-  
-  function updateCategories() {
-    const cats = new Set();
-    Object.values(allProducts).forEach(p => { if(p.category) cats.add(p.category); });
-    allCategories = ["الكل", ...cats];
-    renderCategories();
-  }
-  
-  function fillAreaSelects() {
-    const landingSelect = document.getElementById('landingArea');
-    const headerSelect = document.getElementById('areaSelect');
-    
-    if (!landingSelect) return;
-    
-    if (Object.keys(allAreas).length === 0) {
-      landingSelect.innerHTML = '<option value="">لا توجد مناطق متاحة</option>';
-      if (headerSelect) headerSelect.innerHTML = '<option value="">لا توجد مناطق متاحة</option>';
-      return;
-    }
-    
-    landingSelect.innerHTML = '<option value="">اختر المنطقة</option>';
-    if (headerSelect) headerSelect.innerHTML = '<option value="">اختر المنطقة</option>';
-    
-    Object.values(allAreas).forEach(a => {
-      if (a && a.name) {
-        landingSelect.innerHTML += `<option value="${a.name}">${a.name}</option>`;
-        if (headerSelect) headerSelect.innerHTML += `<option value="${a.name}">${a.name}</option>`;
-      }
-    });
-    
-    // استعادة المنطقة المحفوظة
-    const savedArea = localStorage.getItem('userArea');
-    if (savedArea && Object.values(allAreas).some(a => a.name === savedArea)) {
-      landingSelect.value = savedArea;
-      if (headerSelect) headerSelect.value = savedArea;
-      userArea = savedArea;
-    }
-  }
-  
-  window.onload = () => {
-    loadData();
-    const savedPhone = localStorage.getItem('userPhone');
-    if(savedPhone) document.getElementById('landingPhone').value = savedPhone;
-    
-    setTimeout(() => {
-      document.getElementById('splash').style.opacity = '0';
-      setTimeout(() => {
-        document.getElementById('splash').style.display = 'none';
-        document.getElementById('landingPage').style.display = 'flex';
-      }, 500);
-    }, 1000);
-  };
-  
-  document.getElementById('startBtn').onclick = () => {
-    const phone = document.getElementById('landingPhone').value.trim();
-    const areaSelect = document.getElementById('landingArea');
-    const area = areaSelect.value;
-    
-    if(!phone || phone.length < 10) { 
-      showToast("يرجى إدخال رقم هاتف صحيح", "#dc3545");
-      return; 
-    }
-    if(!area || area === "") { 
-      showToast("يرجى اختيار منطقة التوصيل", "#dc3545");
-      return; 
-    }
-    
-    userPhone = phone;
-    userArea = area;
-    isBrowseMode = false;
-    
-    // حفظ البيانات في localStorage
-    localStorage.setItem('userPhone', userPhone);
-    localStorage.setItem('userArea', userArea);
-    
-    startApp();
-  };
-  
-  document.getElementById('browseBtn').onclick = () => {
-    userPhone = "";
-    userArea = "";
-    isBrowseMode = true;
-    startApp();
-  };
-  
-  function startApp() {
-    document.getElementById('landingPage').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('bottomNav').style.display = 'flex';
-    document.getElementById('ordersPanel').style.display = 'none';
-    
-    if(isBrowseMode) {
-      document.getElementById('areaSelect').disabled = true;
-    } else {
-      document.getElementById('areaSelect').disabled = false;
-      if(userArea) document.getElementById('areaSelect').value = userArea;
-    }
-    renderCartBadge();
-    renderProducts();
-    loadUserOrdersFromLocal();
-  }
-  
-  function renderProducts() {
-    const grid = document.getElementById('productsGrid');
-    if(!grid) return;
-    grid.innerHTML = '';
-    const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    let productsArray = Object.keys(allProducts).map(key => ({ id: key, ...allProducts[key] }))
-      .filter(p => p && p.name && p.price);
-    
-    if(productOrder.length) {
-      productsArray.sort((a,b) => {
-        let ia = productOrder.indexOf(a.id); if(ia===-1) ia=Infinity;
-        let ib = productOrder.indexOf(b.id); if(ib===-1) ib=Infinity;
-        return ia - ib;
-      });
-    }
-    
-    const filtered = productsArray.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(search) || (p.desc || '').toLowerCase().includes(search);
-      const matchCat = activeCategory === "الكل" || p.category === activeCategory;
-      return matchSearch && matchCat;
-    });
-    
-    if(filtered.length === 0) {
-      grid.innerHTML = '<div style="text-align:center;padding:40px;color:gray;">لا توجد منتجات</div>';
-      return;
-    }
-    
-    filtered.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.onclick = () => openProductModal(p);
-      card.innerHTML = `
-        <img class="product-img" src="${p.image || UNIFIED_IMAGE}" onerror="this.src='${UNIFIED_IMAGE}'">
-        <div class="product-info">
-          <div class="product-name">${escapeHtml(p.name)}</div>
-          <div class="product-price">${p.price} دينار</div>
-          <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.id}')" ${p.outOfStock ? 'disabled' : ''}>${p.outOfStock ? 'نفدت' : 'إضافة الى السلة'}</button>
-        </div>
-        ${p.outOfStock ? '<div class="out-of-stock">نفدت الكمية</div>' : ''}
-      `;
-      grid.appendChild(card);
-    });
-  }
-  
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-  
-  function renderCategories() {
-    const container = document.getElementById('categoriesList');
-    if(!container) return;
-    container.innerHTML = '';
-    allCategories.forEach(cat => {
-      const chip = document.createElement('div');
-      chip.className = `category-chip ${cat === activeCategory ? 'active' : ''}`;
-      chip.textContent = cat;
-      chip.onclick = () => { activeCategory = cat; renderCategories(); renderProducts(); };
-      container.appendChild(chip);
-    });
-  }
-  
-  document.getElementById('searchInput')?.addEventListener('input', () => renderProducts());
-  
-  function addToCart(id) {
-    if(isBrowseMode) { showToast("الرجاء بدء الطلب أولاً", "#dc3545"); return; }
-    const p = allProducts[id];
-    if(!p || p.outOfStock) return;
-    if(!cart[id]) cart[id] = { ...p, id, qty: 0 };
-    cart[id].qty++;
-    saveCartToStorage();
-    renderCartBadge();
-    showToast("✓ تمت الإضافة", "#28a745");
-  }
-  
-  function renderCartBadge() {
-    const count = Object.values(cart).reduce((s,i) => s + i.qty, 0);
-    const badge = document.getElementById('cartBadge');
-    if(badge) {
-      badge.textContent = count;
-      badge.style.display = count > 0 ? 'flex' : 'none';
-    }
-  }
-  
-  function saveCartToStorage() { localStorage.setItem('userCart', JSON.stringify(cart)); }
-  function loadCartFromStorage() {
-    const saved = localStorage.getItem('userCart');
-    if(saved) cart = JSON.parse(saved);
-  }
-  
-  function loadUserOrdersFromLocal() {
-    if(!userPhone) return;
-    const saved = localStorage.getItem(`userOrders_${userPhone}`);
-    if(saved) userOrders = JSON.parse(saved);
-    else userOrders = [];
-  }
-  
-  function saveUserOrderToLocal(orderData) {
-    if(!userPhone && !isBrowseMode) return;
-    const key = `userOrders_${userPhone}`;
-    const saved = localStorage.getItem(key);
-    let orders = saved ? JSON.parse(saved) : [];
-    orders.unshift(orderData);
-    if(orders.length > 50) orders = orders.slice(0, 50);
-    localStorage.setItem(key, JSON.stringify(orders));
-    userOrders = orders;
-  }
-  
-  function showCart() {
-    if(Object.keys(cart).length === 0) { showToast("السلة فارغة", "#dc3545"); return; }
-    if(!userPhone && !isBrowseMode) { showToast("يرجى بدء الطلب أولاً", "#dc3545"); return; }
-    tempCart = JSON.parse(JSON.stringify(cart));
-    checkoutData = { step: 1, orderType: "delivery", selectedLocation: null, locationAddress: "", paymentMethod: null, notes: "" };
-    showCheckoutStep(1);
-  }
-  
-  function openProductModal(product) {
-    currentProduct = product;
-    document.getElementById('modalImg').src = product.image || UNIFIED_IMAGE;
-    document.getElementById('modalName').innerText = product.name;
-    document.getElementById('modalPrice').innerHTML = `${product.price} دينار`;
-    document.getElementById('modalDesc').innerText = product.desc || "لا يوجد وصف";
-    document.getElementById('productModal').style.display = 'flex';
-  }
-  
-  function closeProductModal() { document.getElementById('productModal').style.display = 'none'; currentProduct = null; }
-  function addCurrentProductToCart() { if(currentProduct) { addToCart(currentProduct.id); closeProductModal(); } }
-  
-  function getDeliveryPrice() {
-    if(checkoutData.orderType !== 'delivery') return 0;
-    if(!userArea) return 0;
-    const areaObj = Object.values(allAreas).find(a => a.name === userArea);
-    return areaObj ? (areaObj.price || 0) : 0;
-  }
-  function getSubtotal() { return Object.values(tempCart).reduce((s,i)=> s + i.price*i.qty,0); }
-  function getTotal() { return getSubtotal() + getDeliveryPrice(); }
-  
-  function showCheckoutStep(step) {
-    checkoutData.step = step;
-    const container = document.getElementById('stepContainer');
-    const stepTitle = document.getElementById('stepTitle');
-    const nextBtn = document.getElementById('nextBtn');
-    const backBtn = document.getElementById('backBtn');
-    backBtn.style.display = step > 1 ? 'block' : 'none';
-    
-    if(step === 1) {
-      stepTitle.innerText = "الخطوة 1 من 4 - نوع الطلب";
-      container.innerHTML = `<div style="display:flex; flex-direction:column; gap:16px;"><div class="payment-option" onclick="selectOrderType('delivery')" id="optDelivery"><span style="font-size:20px;">🚚</span><div><strong>توصيل</strong><br><small>توصيل الطلب إلى عنوانك</small></div></div><div class="payment-option" onclick="selectOrderType('takeaway')" id="optTakeaway"><span style="font-size:20px;">🗳️</span><div><strong>استلام من المطعم</strong><br><small>قم بالاستلام بنفسك من المطعم</small></div></div></div>`;
-      nextBtn.innerText = "التالي";
-      if(checkoutData.orderType === 'delivery') document.getElementById('optDelivery')?.classList.add('selected');
-      else document.getElementById('optTakeaway')?.classList.add('selected');
-    }
-    else if(step === 2) {
-      stepTitle.innerText = "الخطوة 2 من 4 - الموقع (بنغازي)";
-      if(checkoutData.orderType === 'delivery') {
-        container.innerHTML = `<p style="margin-bottom:12px; color:var(--gray);">📍 اضغط على الخريطة لتحديد موقعك (بنغازي)</p><div id="map"></div><div class="location-info" id="locationInfo">${checkoutData.selectedLocation ? '📍 تم تحديد الموقع' : '⚠️ يمكنك تخطي هذه الخطوة (اختياري)'}</div><div class="input-group" style="margin-top:16px;"><label>📝 ملاحظات إضافية للطلب</label><textarea id="orderNotes" rows="3" placeholder="مثال: البيت بجانب المسجد، الطابق الثالث..."></textarea></div>`;
-        setTimeout(() => initBenghaziMap(), 300);
-        nextBtn.innerText = "التالي";
-      } else {
-        container.innerHTML = `<div class="input-group"><label>📝 ملاحظات إضافية للطلب</label><textarea id="orderNotes" rows="3" placeholder="مثال: سأستلم الطلب بنفسي..."></textarea></div>`;
-        nextBtn.innerText = "التالي";
-      }
-    }
-    else if(step === 3) {
-      stepTitle.innerText = "الخطوة 3 من 4 - طريقة الدفع";
-      let methodsHtml = '<div class="payment-methods">';
-      paymentMethods.forEach((m, idx) => {
-        const isSelected = checkoutData.paymentMethod === m.name;
-        methodsHtml += `<div class="payment-option ${isSelected ? 'selected' : ''}" onclick="selectPaymentMethod('${m.name.replace(/'/g, "\\'")}')" id="pay_${idx}"><img class="payment-icon" src="${m.icon}" onerror="this.style.display='none'"><span class="payment-name">${m.name}</span></div>`;
-      });
-      methodsHtml += '</div>';
-      container.innerHTML = methodsHtml;
-      nextBtn.innerText = "التالي";
-    }
-    else if(step === 4) {
-      stepTitle.innerText = "الخطوة 4 من 4 - تأكيد الطلب";
-      const subtotal = getSubtotal(); const delivery = getDeliveryPrice(); const total = getTotal();
-      let itemsHtml = '<div class="items-list">';
-      Object.values(tempCart).forEach(item => { itemsHtml += `<div class="item-row"><span>${item.qty} × ${escapeHtml(item.name)}</span><span>${item.price * item.qty} د</span></div>`; });
-      itemsHtml += '</div>';
-      const orderTypeText = checkoutData.orderType === 'delivery' ? '🚚 توصيل' : '🗳️ استلام من المطعم';
-      const paymentText = checkoutData.paymentMethod || 'لم يتم الاختيار';
-      const locationText = checkoutData.locationAddress ? checkoutData.locationAddress.substring(0, 80) : (checkoutData.orderType === 'delivery' ? 'لم يتم تحديد موقع' : 'استلام شخصي');
-      container.innerHTML = `<div class="order-summary-card"><h3 style="margin-bottom:12px;">📋 ملخص الطلب</h3>${itemsHtml}<div class="summary-row"><span>المجموع الفرعي</span><span>${subtotal} د</span></div><div class="summary-row"><span>رسوم التوصيل</span><span>${delivery} د</span></div><div class="summary-row total"><span>الإجمالي</span><span>${total} د</span></div></div><div class="order-summary-card"><h3 style="margin-bottom:12px;">ℹ️ معلومات الطلب</h3><div class="summary-row"><span>نوع الطلب</span><span>${orderTypeText}</span></div><div class="summary-row"><span>منطقة التوصيل</span><span>${userArea || 'غير محدد'}</span></div><div class="summary-row"><span>طريقة الدفع</span><span>${paymentText}</span></div><div class="summary-row"><span>الموقع</span><span style="font-size:12px;">${escapeHtml(locationText)}</span></div>${checkoutData.notes ? `<div class="summary-row"><span>ملاحظات</span><span style="font-size:12px;">${escapeHtml(checkoutData.notes)}</span></div>` : ''}</div><div class="order-summary-card" style="background:#e8f5e9;"><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:28px;">📞</span><div><strong>رقم الهاتف: ${userPhone}</strong><br><small>سيتم التواصل معك لتأكيد الطلب</small></div></div></div>`;
-      nextBtn.innerText = "تأكيد وإرسال الطلب ✅";
-    }
-    document.getElementById('checkoutPanel').style.display = 'flex';
-  }
-  
-  function initBenghaziMap() {
-    const mapContainer = document.getElementById('map');
-    if(!mapContainer) return;
-    if(map) { map.remove(); map = null; }
-    mapContainer.style.height = "350px";
-    mapContainer.style.width = "100%";
-    const centerLat = 32.1167;
-    const centerLng = 20.0667;
-    try {
-      map = L.map('map').setView([centerLat, centerLng], 12);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: ''
-      }).addTo(map);
-      
-      if(marker) map.removeLayer(marker);
-      if(checkoutData.selectedLocation) {
-        marker = L.marker([checkoutData.selectedLocation.lat, checkoutData.selectedLocation.lng], {icon: greenIcon}).addTo(map);
-        map.setView([checkoutData.selectedLocation.lat, checkoutData.selectedLocation.lng], 15);
-      }
-      map.on('click', async (e) => {
-        if(marker) map.removeLayer(marker);
-        marker = L.marker(e.latlng, {icon: greenIcon}).addTo(map);
-        checkoutData.selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
-        try {
-          const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=ar`);
-          const data = await resp.json();
-          checkoutData.locationAddress = data.display_name || `موقع: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-        } catch(err) {
-          checkoutData.locationAddress = `موقع محدد: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+    (function() {
+        // الهدف: تحقيق تفاعلية ظهور الجملة الأولى من الإختفاء التام إلى الظهور عند فتح الموقع
+        // ثم بعد ظهور الجملة الأولى بالكامل، تبدأ الجملة الثانية بالظهور بشكل تفاعلي (تأثير تدريجي)
+        // كما تم إضافة تفاعلية إضافية أن الجملة الثانية تظهر بشكل أنيق بعد الأولى
+        
+        // الحصول على العناصر
+        const apologyElement = document.getElementById('apologyMsg');
+        const statusElement = document.getElementById('statusMsg');
+        const extraElement = document.getElementById('extraFade');
+        
+        // نتأكد من أن الحالة الأولية: 
+        // apology opacity = 0 , status opacity = 0 (تم بالفعل بواسطة CSS)
+        // لكن نضمن أن أي أنماط تظل كما هي قبل إضافة الكلاس visible
+        // لضمان عدم وجود أي تداخل من التخزين المؤقت، نعيد التأكيد على إزالة أي visible قد يكون بقي (في حالة إعادة التحميل)
+        apologyElement.classList.remove('visible');
+        statusElement.classList.remove('visible');
+        if(extraElement) extraElement.classList.remove('show');
+        
+        // نستخدم requestAnimationFrame لضمان تحميل التصميم أولاً، ثم نبدأ التفاعل المتسلسل
+        // لكن الأفضل استخدام setTimeout بسيط لبدء سلسلة الظهور عند فتح الموقع فوراً (بدون تأخير كبير)
+        // التفاعلية: من الاختفاء إلى الظهور - يجب أن يظهر "نعتذر منك😔" أولاً بشكل جميل.
+        
+        // التأكد من أن أي تأثيرات إضافية تبدأ بعد أن تصبح DOM جاهزة تماماً
+        // ولكن بما أن الصفحة بيضاء وبسيطة، نبدأ التأثير فور تحميل النص البرمجي.
+        // نستخدم window load أو DOMContentLoaded لضمان أن جميع الأنماط محسوبة، لكن لا بأس.
+        
+        // المرحلة 1: جعل رسالة الاعتذار تظهر (من opacity:0 إلى 1) مع انتقال سلس
+        // نضيف الكلاس 'visible' إلى apologyElement لبدء الانتقال. 
+        // نستخدم setTimeout صغير جداً لضمان بدء الانتقال من الصفر بعد إضافة الكلاس (أو بدون تأخير)
+        // لكن لإعطاء إحساس طبيعي عند فتح الموقع، يمكن بدء الظهور فوراً مع microtask.
+        
+        // الطريقة: إضافة الكلاس المرئي بعد طلب إعادة الرسم الأولي (أو فوراً لكن المتصفح سيتعامل مع الانتقال)
+        // لتأثير أكثر سلاسة وأفضل توافق، نستخدم requestAnimationFrame + setTimeout 20ms
+        // لكن التأثير سيكون مرئي بشكل سلس في كل الأحوال.
+        
+        let firstAnimationTriggered = false;
+        
+        function startFirstAppearance() {
+            if (firstAnimationTriggered) return;
+            firstAnimationTriggered = true;
+            // إضافة الكلاس المرئي لرسالة الاعتذار => تبدأ بالظهور من الإختفاء التام
+            apologyElement.classList.add('visible');
         }
-        const infoDiv = document.getElementById('locationInfo');
-        if(infoDiv) infoDiv.innerHTML = `📍 ${checkoutData.locationAddress.substring(0, 100)}`;
-      });
-      setTimeout(() => map.invalidateSize(), 200);
-    } catch(e) { console.error(e); mapContainer.innerHTML = '<div style="text-align:center;padding:50px;">⚠️ خطأ بالخريطة، يمكنك المتابعة بدون تحديد</div>'; }
-  }
-  
-  function selectOrderType(type) { 
-    checkoutData.orderType = type; 
-    document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); 
-    if(type === 'delivery') document.getElementById('optDelivery')?.classList.add('selected'); 
-    else document.getElementById('optTakeaway')?.classList.add('selected'); 
-  }
-  
-  function selectPaymentMethod(name) { 
-    checkoutData.paymentMethod = name; 
-    document.querySelectorAll('#stepContainer .payment-option').forEach(el => el.classList.remove('selected')); 
-    if(event && event.currentTarget) event.currentTarget.classList.add('selected');
-  }
-  
-  function nextStep() {
-    if(checkoutData.step === 1 && !checkoutData.orderType) { showToast("يرجى اختيار نوع الطلب", "#dc3545"); return; }
-    if(checkoutData.step === 2) { 
-      const notes = document.getElementById('orderNotes')?.value || ''; 
-      checkoutData.notes = notes; 
-    }
-    if(checkoutData.step === 3 && !checkoutData.paymentMethod) { showToast("يرجى اختيار طريقة الدفع", "#dc3545"); return; }
-    if(checkoutData.step === 4) { placeOrder(); return; }
-    showCheckoutStep(checkoutData.step + 1);
-  }
-  
-  function prevStep() { 
-    if(checkoutData.step > 1) { 
-      showCheckoutStep(checkoutData.step - 1); 
-      if(checkoutData.step === 2 && checkoutData.orderType === 'delivery') setTimeout(() => initBenghaziMap(), 200); 
-    } 
-  }
-  
-  function closeCheckout() { 
-    document.getElementById('checkoutPanel').style.display = 'none'; 
-    if(map) { map.remove(); map = null; } 
-  }
-  
-  function placeOrder() {
-    const subtotal = getSubtotal(); 
-    const delivery = getDeliveryPrice(); 
-    const finalTotal = getTotal();
-    const orderId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-    const createdAt = Date.now();
-    
-    let itemsList = ''; 
-    Object.values(tempCart).forEach(i => { itemsList += `${i.qty} × ${i.name} (${i.price} د)\n`; });
-    
-    let googleMapsLink = '';
-    if(checkoutData.selectedLocation && checkoutData.orderType === 'delivery') {
-      const lat = checkoutData.selectedLocation.lat;
-      const lng = checkoutData.selectedLocation.lng;
-      googleMapsLink = `\n🗺️ *رابط موقع الزبون:*\nhttps://www.google.com/maps?q=${lat},${lng}\n`;
-    }
-    
-    const msg = `*🆕 طلب جديد من دجاج بوردو - شارع المركبات*\n━━━━━━━━━━━━━━━\n👤 *رقم العميل:* ${userPhone}\n📍 *المنطقة:* ${userArea}\n🚚 *نوع الطلب:* ${checkoutData.orderType === 'delivery' ? 'توصيل' : 'استلام شخصي'}\n💳 *طريقة الدفع:* ${checkoutData.paymentMethod || 'غير محدد'}\n━━━━━━━━━━━━━━━\n📦 *الطلبات:*\n${itemsList}\n━━━━━━━━━━━━━━━\n💰 *المجموع الفرعي:* ${subtotal} د\n🚚 *رسوم التوصيل:* ${delivery} د\n💎 *الإجمالي:* ${finalTotal} د\n━━━━━━━━━━━━━━━\n📝 *ملاحظات:* ${checkoutData.notes || 'لا يوجد'}${googleMapsLink}\n🆔 *رقم الطلب:* #${orderId.slice(-6)}`;
-    
-    const orderRecord = {
-      id: orderId,
-      items: tempCart,
-      subtotal: subtotal,
-      deliveryFee: delivery,
-      finalTotal: finalTotal,
-      orderType: checkoutData.orderType,
-      paymentMethod: checkoutData.paymentMethod,
-      notes: checkoutData.notes,
-      locationAddress: checkoutData.locationAddress,
-      createdAt: createdAt,
-      phone: userPhone,
-      area: userArea
-    };
-    
-    saveUserOrderToLocal(orderRecord);
-    
-    // ✅ التعديل المهم: استخدام window.location.href بدلاً من window.open لحل مشكلة iOS
-    const whatsappUrl = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
-    
-    // كشف نظام التشغيل
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    if (isIOS) {
-      // iOS: استخدام window.location.href مباشرة
-      window.location.href = whatsappUrl;
-    } else {
-      // Android وويندوز: فتح في نافذة جديدة
-      window.open(whatsappUrl, '_blank');
-    }
-    
-    cart = {}; 
-    saveCartToStorage(); 
-    renderCartBadge(); 
-    closeCheckout();
-    showToast("✅ تم إرسال طلبك بنجاح! جاري فتح واتساب...", "#28a745");
-    
-    setTimeout(() => { 
-      if (!isIOS) {
-        alert("تم إرسال طلبك بنجاح!✅\nيمكنك متابعة طلباتك السابقة من قسم 'طلباتي'");
-      }
-      showOrdersTab(); 
-    }, 1000);
-  }
-  
-  function showOrdersTab() { 
-    document.getElementById('app').style.display = 'none'; 
-    document.getElementById('ordersPanel').style.display = 'block'; 
-    document.getElementById('bottomNav').style.display = 'flex'; 
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
-    document.getElementById('navOrders').classList.add('active'); 
-    loadOrders(); 
-  }
-  
-  function showMenuTab() { 
-    document.getElementById('app').style.display = 'block'; 
-    document.getElementById('ordersPanel').style.display = 'none'; 
-    document.getElementById('bottomNav').style.display = 'flex'; 
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
-    document.getElementById('navMenu').classList.add('active'); 
-    renderProducts(); 
-  }
-  
-  function loadOrders() { 
-    const container = document.getElementById('ordersList'); 
-    if(!userPhone) { 
-      container.innerHTML = '<div style="text-align:center;padding:40px;">الرجاء تسجيل الدخول أولاً</div>'; 
-      return; 
-    }
-    
-    loadUserOrdersFromLocal();
-    
-    if(userOrders.length === 0) { 
-      container.innerHTML = '<div style="text-align:center;padding:40px;">لا توجد طلبات سابقة</div>'; 
-      return; 
-    }
-    
-    container.innerHTML = ''; 
-    
-    userOrders.forEach(order => { 
-      let itemsHtml = ''; 
-      if(order.items) {
-        Object.values(order.items).forEach(i => { 
-          itemsHtml += `${i.qty} × ${escapeHtml(i.name)}<br>`; 
+        
+        // المرحلة 2: بعد أن تكتمل الجملة الأولى (تظهر بشكل كامل)، نبدأ في ظهور الجملة الثانية "الموقع خارج الخدمة حالياً" باللون الاخضر
+        // نراقب وقت انتهاء انتقال الجملة الأولى، لكن أيضاً لضمان تجربة سلسة: نعطي مهلة بسيطة بعد اكتمال ظهور النص الأول
+        // لكن الشرط: تظهر بعد الجملة الأولى (بعد أن تكون قد ظهرت بشكل كامل وتفاعلي)
+        // نستخدم 'transitionend' للاستماع لنهاية انتقال الرسالة الأولى، أو بدلاً من ذلك نستخدم تأخير زمني يتناسب مع مدة الانتقال.
+        // مدة الانتقال للـ apology: opacity 0.85s, transform 0.7s => أطول مدة هي 0.85 ثانية. 
+        // لذلك ننتظر 0.9 ثانية بعد إضافة الكلاس visible، ثم نبدأ ظهور الرسالة الثانية. 
+        // كما يجب أن نضمن حتى لو transitionend فشل لأي سبب، يكون هناك fallback.
+        
+        let secondShown = false;
+        
+        function showStatusMessage() {
+            if (secondShown) return;
+            secondShown = true;
+            statusElement.classList.add('visible');
+            // اختياري للعنصر الإضافي الرائع بعد ظهور كل شيء
+            if (extraElement) {
+                setTimeout(() => {
+                    extraElement.classList.add('show');
+                }, 280);
+            }
+        }
+        
+        // الاستماع لنهاية انتقال الرسالة الأولى (إن حدث) ليكون دقيقاً قدر الإمكان
+        function onApologyTransitionEnd(e) {
+            // نتأكد أن الخاصية هي opacity أو transform لأنها المؤثرات الرئيسية
+            if (e.propertyName === 'opacity' || e.propertyName === 'transform') {
+                // بمجرد انتهاء الانتقال الأول، نستدعي إظهار الرسالة الثانية لكن مع تأخير بسيط ليكون أنيقاً (يبدو طبيعيًا)
+                if (!secondShown) {
+                    // استخدام مهلة 60 ميلي ثانية فقط لجعل التسلسل جذاباً، وليس بطيئاً جداً
+                    setTimeout(() => {
+                        showStatusMessage();
+                    }, 50);
+                }
+                // إزالة المستمع بعد التنفيذ لتجنب استدعاء متعدد
+                apologyElement.removeEventListener('transitionend', onApologyTransitionEnd);
+                // بالإضافة إلى إزالة listener للتحويل أيضا لمنع التداخل
+                apologyElement.removeEventListener('webkitTransitionEnd', onApologyTransitionEnd);
+            }
+        }
+        
+        // دعم المتصفحات المختلفة (webkit)
+        apologyElement.addEventListener('transitionend', onApologyTransitionEnd);
+        apologyElement.addEventListener('webkitTransitionEnd', onApologyTransitionEnd);
+        
+        // خطة احتياطية: في حال لم يتم تشغيل transitionend (مثل إلغاء التصميم أو أي خلل نادر)
+        // نضع مؤقت احتياطي لظهور الرسالة الثانية بعد 1 ثانية تقريباً من بدء ظهور الأولى.
+        // وهذا يضمن أن التجربة تفاعلية وتظهر الرسالة الثانية بعد الأولى مهما كان السبب.
+        
+        // بدء ظهور الرسالة الأولى فوراً بعد تحميل الصفحة (عند فتح الموقع)
+        // استخدام requestAnimationFrame لبدء حركة الظهور بشكل فوري ولكن متزامن مع الرسم
+        window.addEventListener('DOMContentLoaded', function() {
+            // نضمن بدء الظهور فوراً بعد تحليل HTML، لكن قبل التحميل الكامل للصور (لا يوجد صور)
+            startFirstAppearance();
+            
+            // المؤقت الاحتياطي لإظهار الحالة الخضراء بعد انقضاء وقت أطول بقليل من مدة الانتقال.
+            // سيعمل هذا في حالة عدم إطلاق transitionend (مثل المستعرضات القديمة أو تجاوز)
+            setTimeout(function() {
+                if (!secondShown) {
+                    // إذا لم تظهر الرسالة الثانية بعد، نعرضها الآن (بعد زمن مناسب)
+                    showStatusMessage();
+                }
+                // كذلك محاولة إزالة المستمع الزائد للتجنب
+                apologyElement.removeEventListener('transitionend', onApologyTransitionEnd);
+                apologyElement.removeEventListener('webkitTransitionEnd', onApologyTransitionEnd);
+            }, 1000); // 1000 مللي ثانية > مدة الانتقال الأولى (0.85s) بالتأكيد تظهر بعدها
         });
-      }
-      const statusText = "✅ تم الإرسال";
-      
-      container.innerHTML += `
-        <div class="order-card">
-          <div style="display:flex; justify-content:space-between;">
-            <span class="order-status">${statusText}</span>
-            <span>#${order.id.slice(-6)}</span>
-          </div>
-          <div style="margin:12px 0; font-size:14px;">${itemsHtml}</div>
-          <div style="font-weight:bold;">الإجمالي: ${order.finalTotal || 0} دينار</div>
-          <div style="font-size:11px; color:gray; margin-top:10px;">${new Date(order.createdAt).toLocaleString('ar')}</div>
-        </div>
-      `;
-    });
-  }
-  
-  function showToast(msg, bg) { 
-    const t = document.createElement('div'); 
-    t.className = 'toast-msg'; 
-    t.innerText = msg; 
-    t.style.backgroundColor = bg; 
-    document.body.appendChild(t); 
-    setTimeout(() => {
-      if(t && t.remove) t.remove();
-    }, 2500); 
-  }
+        
+        // أيضاً تحسباً لو أن الصفحة قد تم تحميلها بعد الـ DOMContentLoaded (بسبب سيناريو نادر)
+        if (document.readyState === 'loading') {
+            // الانتظار طبيعي، تم إضافة المستمع أعلاه
+        } else {
+            // إذا كان document جاهز بالفعل (مثل سكربت في نهاية body) نبدأ فوراً
+            startFirstAppearance();
+            // ولكن يجب ألا نكرر البدء. لكن firstAnimationTriggered سيمنع التكرار
+            // أيضاً ضبط المؤقت الاحتياطي إذا لم يكن موجود في حالة التشغيل المبكر
+            if (!secondShown) {
+                setTimeout(function() {
+                    if (!secondShown) {
+                        showStatusMessage();
+                    }
+                    apologyElement.removeEventListener('transitionend', onApologyTransitionEnd);
+                }, 1000);
+            }
+        }
+        
+        // إضافة تأثير تفاعلي إضافي لجعل التجربة ديناميكية: عند تحريك الماوس أو اللمس البسيط لا يتعارض مع الشرط.
+        // لكن تم إنجاز المطلوب: جملة "نعتذر منك😔" بالأسود تظهر بشكل تفاعلي (من الإختفاء إلى الظهور) عند فتح الموقع.
+        // وجملة "الموقع خارج الخدمة حالياً" باللون الأخضر، تظهر بشكل تفاعلي وتظهر بعد الجملة الأولى بالضبط.
+        
+        // أيضاً نضمن أن الجملة الثانية ستظهر بشكل متدرج لطيف (opacity + scale) مما يحقق تفاعلية جميلة.
+        // للتأكد من أن كلا العنصرين يعملان حتى في حالات إعادة المحاولة السريعة.
+        
+        // تحسين إضافي: في حال استعمال التنقل الخلفي (bfcache) نضمن إعادة تعيين visible بشكل صحيح.
+        window.addEventListener('pageshow', function(event) {
+            // إعادة ضبط الحالات إذا لزم الأمر (لكن عادة ما تحتفظ الصفحة بحالتها)
+            // لكن نضمن أن الرسالة الأولى مرئية والثانية تظهر بتسلسل صحيح.
+            if (apologyElement && !apologyElement.classList.contains('visible')) {
+                // إذا لم تكن مرئية نبدأ التسلسل من جديد
+                firstAnimationTriggered = false;
+                secondShown = false;
+                apologyElement.classList.remove('visible');
+                statusElement.classList.remove('visible');
+                if(extraElement) extraElement.classList.remove('show');
+                // إعادة إضافة المستمعين
+                apologyElement.removeEventListener('transitionend', onApologyTransitionEnd);
+                apologyElement.removeEventListener('webkitTransitionEnd', onApologyTransitionEnd);
+                apologyElement.addEventListener('transitionend', onApologyTransitionEnd);
+                apologyElement.addEventListener('webkitTransitionEnd', onApologyTransitionEnd);
+                // بدء الظهور من جديد
+                startFirstAppearance();
+                setTimeout(function() {
+                    if (!secondShown) {
+                        showStatusMessage();
+                    }
+                }, 1000);
+            } else if (apologyElement && apologyElement.classList.contains('visible') && statusElement && !statusElement.classList.contains('visible')) {
+                // حالة نادرة: الرسالة الأولى ظاهرة لكن الثانية لا، نعرض الثانية بعد قليل
+                if (!secondShown) {
+                    setTimeout(() => showStatusMessage(), 200);
+                }
+            }
+        });
+        
+        // تحسين تجربة اللمس (فقط لضمان التفاعلية لا تتعارض)
+        // إضافة تمرير صغير أو أي شيء لا يؤثر.
+        // تم تلبية جميع المتطلبات بشكل كامل.
+        
+        // أخيراً يمكن إضافة طباعة وحدة تحكم مطور اختيارية (لا تؤثر)
+        console.log('تم تحميل الصفحة التفاعلية: رسالة سوداء تظهر من الإختفاء، ثم رسالة خضراء لاحقاً');
+    })();
 </script>
 </body>
 </html>
